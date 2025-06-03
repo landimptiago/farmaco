@@ -78,16 +78,14 @@
             display: flex;
             flex-direction: column;
             min-height: 0; 
-            margin-bottom: 2rem; 
         }
 
         #mermaidZoomWrapper {
             width: 100%;
-            min-height: 75vh; 
+            min-height: 85vh; /* Altura mínima aumentada para o wrapper do mapa */
             flex-grow: 1; 
-            overflow: hidden; /* O wrapper não tem scroll, o <pre> terá */
-            display: flex; /* Para que o <pre> filho possa usar flex-grow */
-            flex-direction: column; /* Para que o <pre> filho possa usar height: 100% */
+            overflow: hidden; 
+            display: block; 
             border: 1px solid var(--cor-borda-suave); 
             border-radius: 0.5rem;
             background-color: #e9ecef; 
@@ -102,10 +100,10 @@
             text-align: left; 
             width: 100%; 
             height: 100%; 
-            overflow: auto; /* Barras de rolagem para pan */
+            overflow: auto; 
             display: block; 
             box-sizing: border-box;
-            flex-grow: 1; /* Faz o <pre> ocupar o espaço do wrapper */
+            flex-grow: 1; 
         }
         
         pre.mermaid svg { 
@@ -113,8 +111,8 @@
             max-width: none; 
             width: auto; 
             height: auto; 
-            min-width: 100%; /* Para o SVG tentar ocupar o <pre> */
-            min-height: 100%;/* Para o SVG tentar ocupar o <pre> */
+            min-width: 100%; 
+            min-height: 100%;
             transition: transform 0.1s ease-out; 
             transform-origin: 0 0; 
         }
@@ -165,6 +163,7 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #9d887a; 
         }
+
         .zoom-button {
             background-color: var(--cor-bordo-principal); 
             color: white;
@@ -807,6 +806,179 @@ graph TD
                 </pre></div>
             </div>
         </div>
+
+    </main>
+    </div> 
+    <script>
+        mermaid.initialize({ startOnLoad: false }); 
+
+        let currentMapId = null; 
+        let currentLink = null;
+        let currentActiveMermaidPreElement = null; 
+        let currentScale = 1.0;
+        const scaleStep = 0.2;
+        const minScale = 0.2; 
+        const maxScale = 5.0; 
+
+        function applyZoom() {
+            if (currentActiveMermaidPreElement) { 
+                const svgElement = currentActiveMermaidPreElement.querySelector('svg');
+                if (svgElement) {
+                    svgElement.style.transform = `scale(${currentScale})`;
+                }
+            }
+        }
+
+        function zoomIn() {
+            if (currentScale < maxScale) {
+                currentScale = parseFloat((currentScale + scaleStep).toFixed(2));
+                applyZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (currentScale > minScale) {
+                currentScale = parseFloat((currentScale - scaleStep).toFixed(2));
+                applyZoom();
+            }
+        }
+
+        function resetZoom() {
+            currentScale = 1.0;
+            applyZoom();
+             if (currentActiveMermaidPreElement) { 
+                currentActiveMermaidPreElement.scrollTop = 0;
+                currentActiveMermaidPreElement.scrollLeft = 0;
+            }
+        }
+
+        function showMap(mapWrapperId, linkElement) {
+            document.getElementById('welcomeMessage').classList.add('hidden');
+            document.getElementById('mapDisplayArea').classList.remove('hidden');
+            document.getElementById('mapDisplayArea').classList.add('flex', 'flex-col'); 
+            // AI Section is removed, so no need to show/hide it.
+
+            const mapContents = document.querySelectorAll('.map-content');
+            mapContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            if (currentLink) {
+                currentLink.classList.remove('active', 'bg-[#e1bee7]', 'text-[var(--cor-bordo-principal)]', 'border-[var(--cor-bordo-principal)]');
+                currentLink.classList.add('text-[var(--cor-texto-secundario)]');
+            }
+            
+            const selectedMapWrapper = document.getElementById(mapWrapperId); 
+            if (selectedMapWrapper) {
+                selectedMapWrapper.classList.remove('hidden');
+                const navLinkTextElement = linkElement.querySelector('.nav-link-text');
+                if (navLinkTextElement) {
+                     document.getElementById('mapTitle').textContent = navLinkTextElement.textContent; 
+                }
+
+
+                linkElement.classList.add('active', 'bg-[#e1bee7]', 'text-[var(--cor-bordo-principal)]', 'border-[var(--cor-bordo-principal)]');
+                linkElement.classList.remove('text-[var(--cor-texto-secundario)]');
+                currentLink = linkElement;
+                currentMapId = mapWrapperId; 
+                currentActiveMermaidPreElement = selectedMapWrapper.querySelector('pre.mermaid');
+
+                resetZoom(); 
+
+                if (currentActiveMermaidPreElement) {
+                    const mermaidCodeElementId = currentActiveMermaidPreElement.id;
+                    let mermaidCode = currentActiveMermaidPreElement.dataset.originalCode;
+
+                    if (!mermaidCode) { 
+                        mermaidCode = currentActiveMermaidPreElement.textContent;
+                        currentActiveMermaidPreElement.dataset.originalCode = mermaidCode; 
+                    }
+                    
+                    currentActiveMermaidPreElement.innerHTML = '<div class="flex justify-center items-center h-full w-full"><svg class="animate-spin h-10 w-10 text-[var(--cor-bordo-principal)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>'; 
+                    currentActiveMermaidPreElement.removeAttribute('data-processed');
+
+                    if (!mermaidCode || mermaidCode.trim() === '') {
+                        console.error("Mermaid code is empty for " + mermaidCodeElementId);
+                        currentActiveMermaidPreElement.innerHTML = `<div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-md"><p class="font-semibold">Erro: Código do mapa mental está vazio.</p></div>`;
+                        return;
+                    }
+                    
+                    setTimeout(async () => {
+                        try {
+                            const uniqueSvgId = 'mermaid-svg-' + mapWrapperId.replace('_wrapper', '') + '-' + Date.now();
+                            const { svg, bindFunctions } = await mermaid.render(uniqueSvgId, mermaidCode);
+                            currentActiveMermaidPreElement.innerHTML = svg;
+                            if (bindFunctions) {
+                                bindFunctions(currentActiveMermaidPreElement); 
+                            }
+                            const svgElement = currentActiveMermaidPreElement.querySelector('svg');
+                            if (svgElement) {
+                                svgElement.style.transformOrigin = '0 0'; 
+                                applyZoom(); 
+                            } else {
+                                console.warn("SVG element not found immediately after render for " + mermaidCodeElementId);
+                            }
+                        } catch (err) {
+                            console.error("Mermaid rendering error on " + mermaidCodeElementId + ":", err);
+                            currentActiveMermaidPreElement.innerHTML = 
+                                `<div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">` +
+                                `<p class="font-semibold">Erro ao renderizar o mapa:</p>` +
+                                `<p class="text-sm">${err.message || err.str || JSON.stringify(err)}</p>` +
+                                `<p class="mt-2 font-semibold">Código Mermaid com problema (verifique a sintaxe):</p>` +
+                                `<pre class="text-xs mt-1 whitespace-pre-wrap bg-gray-100 p-2 rounded">${mermaidCode.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>` +
+                                `</div>`;
+                        }
+                    }, 150); 
+                }
+            } else {
+                console.error("Map wrapper with ID '" + mapWrapperId + "' not found.");
+            }
+        }
+        
+        document.getElementById('toggleMenuBtn').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('minimized');
+            const isMinimized = sidebar.classList.contains('minimized');
+            this.querySelector('.sidebar-text').style.display = isMinimized ? 'none' : 'inline';
+            document.getElementById('sidebarTitle').style.display = isMinimized ? 'none' : 'block';
+            const navLinkTexts = document.querySelectorAll('#sidebar .nav-link-text');
+            navLinkTexts.forEach(text => {
+                text.style.display = isMinimized ? 'none' : 'inline';
+            });
+            const navLinks = document.querySelectorAll('#sidebar .nav-link');
+             navLinks.forEach(link => {
+                link.style.justifyContent = isMinimized ? 'center' : 'flex-start';
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('mapDisplayArea').classList.add('hidden');
+            document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
+            document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);
+            document.getElementById('zoomResetBtn').addEventListener('click', resetZoom);
+            
+            const sidebar = document.getElementById('sidebar');
+            const isMinimized = sidebar.classList.contains('minimized');
+            const toggleButtonTextSpan = document.getElementById('toggleMenuBtn').querySelector('.sidebar-text');
+            if (toggleButtonTextSpan) {
+                toggleButtonTextSpan.style.display = isMinimized ? 'none' : 'inline';
+            }
+            
+            const sidebarTitle = document.getElementById('sidebarTitle');
+            if (sidebarTitle) {
+                 sidebarTitle.style.display = isMinimized ? 'none' : 'block';
+            }
+
+            const navLinkTexts = document.querySelectorAll('#sidebar .nav-link-text');
+            navLinkTexts.forEach(text => {
+                text.style.display = isMinimized ? 'none' : 'inline';
+            });
+            const navLinks = document.querySelectorAll('#sidebar .nav-link');
+             navLinks.forEach(link => {
+                link.style.justifyContent = isMinimized ? 'center' : 'flex-start';
+            });
+        });
+    </script>
 
 </body>
 </html>
