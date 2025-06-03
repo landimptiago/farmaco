@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -10,16 +9,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --cor-bordo-principal: #800020; /* Bordô Principal */
-            --cor-bordo-hover: #600018;    /* Bordô Mais Escuro para Hover */
-            --cor-bordo-claro: #A04050;   /* Bordô Claro para Destaques */
-            --cor-dourado-principal: #FFD700; /* Dourado Principal */
-            --cor-dourado-texto: #B8860B;   /* Dourado Escuro para Texto */
-            --cor-fundo-geral: #fdf6e3; /* Um tom creme/bege para o fundo */
-            --cor-fundo-container: #fffaf0; /* Branco antigo/floral para containers */
-            --cor-texto-principal: #5d4037; /* Marrom escuro para texto */
-            --cor-texto-secundario: #795548; /* Marrom médio para texto secundário */
-            --cor-borda-suave: #d7ccc8; /* Borda marrom clara */
+            --cor-bordo-principal: #8C1C1C; 
+            --cor-bordo-hover: #6D1515;    
+            --cor-bordo-claro: #B03A2E;   
+            --cor-dourado-principal: #DAA520; 
+            --cor-dourado-hover: #B8860B;   
+            --cor-dourado-texto: #FFFFFF; /* Texto branco para melhor contraste no botão dourado */
+            --cor-fundo-geral: #F5F5F5; 
+            --cor-fundo-container: #FFFFFF; 
+            --cor-texto-principal: #333333; 
+            --cor-texto-secundario: #555555; 
+            --cor-borda-suave: #D1D5DB; 
         }
 
         body {
@@ -41,7 +41,7 @@
             transition: width 0.3s ease-in-out;
             flex-shrink: 0; 
             background-color: var(--cor-fundo-container);
-            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
             border-right: 1px solid var(--cor-borda-suave);
@@ -68,7 +68,7 @@
         #mainContent {
             flex-grow: 1;
             overflow-y: auto; 
-            padding: 1.5rem; /* Aumentado padding */
+            padding: 1.5rem; 
             display: flex;
             flex-direction: column;
         }
@@ -78,52 +78,63 @@
             display: flex;
             flex-direction: column;
             min-height: 0; 
+            margin-bottom: 2rem; /* Adiciona margem abaixo da área do mapa */
         }
 
         #mermaidZoomWrapper {
             width: 100%;
-            min-height: 85vh; /* Aumente este valor conforme desejado */
-            flex-grow: 1;
-            display: flex; /* Para que o <pre> possa usar height: 100% efetivamente */
-            /* Remova padding e background daqui se quiser que o <pre> seja o container principal visível */
-            /* padding: 0; */
-            /* background-color: transparent; */
+            min-height: 75vh; /* Altura aumentada para o wrapper do mapa */
+            flex-grow: 1; 
+            overflow: hidden; 
+            display: block; 
+            border: 1px solid var(--cor-borda-suave); 
+            border-radius: 0.5rem;
+            background-color: #e9ecef; 
+            padding: 0.5rem; 
+            box-sizing: border-box;
         }
 
         pre.mermaid {
-            width: 100%;
-            height: 100%; /* Para preencher o #mermaidZoomWrapper */
-            overflow: auto;
-            background-color: var(--cor-fundo-container); /* Cor branca/creme */
-            border: 1px solid var(--cor-borda-suave);
+            background-color: var(--cor-fundo-container);
+            padding: 1rem;
             border-radius: 0.5rem;
-            padding: 1rem; /* Padding interno para o SVG */
+            text-align: left; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            display: block; 
             box-sizing: border-box;
-            display: block; /* Ou flex, dependendo do alinhamento do SVG */
         }
         
         pre.mermaid svg { 
             display: block; 
             max-width: none; 
             width: auto; 
-            height: 100%; 
-            transition: transform 0.2s ease-out; 
+            height: auto; 
+            min-width: 100%; 
+            min-height: 100%;
+            transition: transform 0.1s ease-out; 
             transform-origin: 0 0; 
         }
 
         .nav-link {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border-left: 4px solid transparent;
             display: flex; 
             align-items: center; 
-            padding: 0.5rem 1rem; /* Diminuído padding vertical */
+            padding: 0.5rem 1rem; 
             color: var(--cor-texto-secundario);
             border-radius: 0.375rem;
         }
-        .nav-link:hover, .nav-link.active {
-            background-color: #efebe9; /* Bege claro para hover/active */
+        .nav-link:hover {
+            background-color: #f3e5f5; 
+            color: var(--cor-bordo-principal);
+        }
+        .nav-link.active {
+            background-color: #e1bee7; 
             border-left-color: var(--cor-bordo-principal); 
             color: var(--cor-bordo-principal); 
+            font-weight: 500;
         }
         .nav-link .icon {
             margin-right: 0.75rem; 
@@ -132,36 +143,33 @@
         .content-container {
             background-color: var(--cor-fundo-container);
             border-radius: 0.75rem;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.08); /* Sombra mais suave */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08); 
             border: 1px solid var(--cor-borda-suave);
         }
         
         ::-webkit-scrollbar {
-            width: 10px; 
-            height: 10px;
+            width: 12px; 
+            height: 12px;
         }
         ::-webkit-scrollbar-track {
-            background: #eee; 
+            background: #f1f1f1; 
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #c1a288; /* Tom de marrom para scrollbar */
+            background: #bcaaa4; 
             border-radius: 10px;
-            border: 2px solid #eee; 
+            border: 3px solid #f1f1f1; 
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #a4876c; 
+            background: #9d887a; 
         }
         #aiAssistantSection {
             flex-shrink: 0; 
-            /* max-height: 25vh; Reduzido ainda mais */
-            display: flex;
-            flex-direction: column;
-            margin-top: 1.5rem; 
+            padding: 1rem; 
         }
         .ai-buttons-container {
             display: flex;
-            gap: 0.75rem; /* Aumentado gap */
+            gap: 0.75rem; 
             margin-bottom: 1rem;
         }
         #aiResponseArea {
@@ -169,8 +177,9 @@
             overflow-y: auto;
             white-space: pre-wrap; 
             word-wrap: break-word;
-            background-color: #fdfdfd; 
-            min-height: 60px; 
+            background-color: #fafafa; 
+            min-height: 70px; 
+            max-height: 25vh; /* Limitando altura da resposta da IA */
             padding: 0.75rem; 
             border: 1px solid var(--cor-borda-suave); 
             border-radius: 0.375rem; 
@@ -178,10 +187,10 @@
         .zoom-button {
             background-color: var(--cor-bordo-principal); 
             color: white;
-            font-weight: 500; /* Ajustado peso da fonte */
-            padding: 0.4rem 0.8rem; /* Diminuído padding */
+            font-weight: 500; 
+            padding: 0.35rem 0.7rem; 
             border-radius: 0.375rem;
-            margin: 0 0.15rem; /* Diminuído margem */
+            margin: 0 0.1rem; 
             transition: background-color 0.2s;
             cursor: pointer;
             border: none;
@@ -206,29 +215,12 @@
         .toggle-menu-button:hover {
             background-color: var(--cor-bordo-principal);
         }
-        .sidebar-footer {
-            margin-top: auto; /* Empurra para o final */
-            padding-top: 1rem;
-            border-top: 1px solid var(--cor-borda-suave);
-            text-align: center;
-        }
-        .sidebar-footer img {
-            max-width: 100px; /* Ajuste o tamanho conforme necessário */
-            border-radius: 0.375rem;
-            margin-bottom: 0.5rem;
-            border: 2px solid var(--cor-dourado-principal);
-        }
-        .sidebar-footer p {
-            font-weight: 600;
-            color: var(--cor-bordo-principal);
-        }
     </style>
 </head>
 <body>
     <div class="main-container">
-        <!-- Navegação Lateral -->
         <nav id="sidebar" class="p-4 flex flex-col">
-            <div> <!-- Wrapper para conteúdo superior do sidebar para permitir footer fixo -->
+            <div> 
                 <button id="toggleMenuBtn" class="toggle-menu-button mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 inline-block">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -247,18 +239,13 @@
                     <li><a href="#" class="nav-link" onclick="showMap('map18_wrapper', this)"> <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7.014A7.962 7.962 0 0112 2c2.295 0 4.45.783 6.146 2.143L12 12l5.657 6.657z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657L12 12m5.657 6.657l-2.829-2.828m0 0a2 2 0 10-2.828 2.828l2.829-2.828z"></path></svg> <span class="nav-link-text">Aula 18: Anti-histamínicos</span></a></li>
                 </ul>
             </div>
-            <div class="sidebar-footer p-4">
-                <img src="https://placehold.co/100x100/800020/FFD700?text=CARONAS&font=impact" alt="Logo da Turma Caronas" class="mx-auto">
-                <p class="sidebar-text">Caronas</p>
-            </div>
         </nav>
 
-        <!-- Área de Conteúdo Principal -->
         <div id="mainContent">
             <div id="welcomeMessage" class="content-container p-6 md:p-10 text-center flex-grow flex flex-col justify-center items-center">
                 <h1 class="text-3xl md:text-4xl font-bold text-[var(--cor-bordo-principal)] mb-4">Bem-vindo(a) aos Mapas Mentais de Farmacologia!</h1>
                 <p class="text-lg text-[var(--cor-texto-secundario)]">Selecione uma aula no menu ao lado para visualizar o mapa mental correspondente.</p>
-                <img src="https://placehold.co/500x300/A04050/FFD700?text=Farmacologia+Interativa&font=inter" alt="Ilustração de Farmacologia" class="mt-8 mx-auto rounded-lg shadow-md">
+                <img src="https://placehold.co/500x300/B03A2E/DAA520?text=Farmacologia+Interativa&font=inter" alt="Ilustração de Farmacologia" class="mt-8 mx-auto rounded-lg shadow-md">
             </div>
 
             <div id="mapDisplayArea" class="hidden flex-grow flex flex-col content-container p-2 md:p-4">
@@ -272,16 +259,16 @@
 
                 <div id="mermaidZoomWrapper" class="flex-grow"> 
                     <div id="map10_11_wrapper" class="map-content hidden mermaid-container-wrapper"><pre class="mermaid" id="map10_11_mermaid_code">
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#4E342E', 'primaryBorderColor': '#D1C4E9', 'lineColor': '#795548', 'secondaryColor': '#FBE9E7', 'tertiaryColor': '#EFEBE9', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#FFF8E1', 'clusterBkg': '#FFFDE7'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#fffaf0', 'primaryTextColor': '#5d4037', 'primaryBorderColor': '#8C1C1C', 'lineColor': '#795548', 'secondaryColor': '#FDF5E6', 'tertiaryColor': '#FAF0E6', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#fffaf0', 'clusterBkg': '#FFF8DC'}}}%%
 graph TD
-    classDef aulaNode fill:#A04050,stroke:#600018,color:#fff,font-weight:bold
-    classDef topicoNode fill:#FFD700,stroke:#B8860B,color:#5d4037
-    classDef subTopicoNode fill:#D2B48C,stroke:#8B4513,color:#5d4037
-    classDef detalheNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037
-    classDef farmacoNode fill:#F5F5DC,stroke:#B8860B,color:#5d4037,font-weight:bold
-    classDef obsNode fill:#FFF8DC,stroke:#DAA520,color:#5d4037,font-style:italic
-    classDef questaoNode fill:#FFE4B5,stroke:#D2691E,color:#5d4037,font-style:italic
-    classDef warningNode fill:#FFC0CB,stroke:#800020,color:#800020,font-weight:bold
+    classDef aulaNode fill:#8C1C1C,stroke:#6D1515,color:#fff,font-weight:bold
+    classDef topicoNode fill:#DAA520,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef subTopicoNode fill:#B03A2E,stroke:#8C1C1C,color:#fff
+    classDef detalheNode fill:#F0E68C,stroke:#DAA520,color:#5d4037
+    classDef farmacoNode fill:#FFF8DC,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef obsNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037,font-style:italic
+    classDef questaoNode fill:#F5DEB3,stroke:#D2B48C,color:#5d4037,font-style:italic
+    classDef warningNode fill:#FFDAB9,stroke:#FF8C00,color:#800000,font-weight:bold
 
     A["Aula 10/11: Neurotransmissão 5-HT e NE"]:::aulaNode --> B["Transtornos Afetivos"]:::topicoNode;
     A --> C["Antidepressivos"]:::topicoNode;
@@ -840,7 +827,6 @@ graph TD
             </div>
         </div>
 
-        <!-- Seção do Assistente de IA Gemini -->
         <div id="aiAssistantSection" class="content-container p-4 md:p-6">
             <h2 class="text-xl md:text-2xl font-bold text-[var(--cor-bordo-principal)] mb-4">✨ Assistente de Estudo IA</h2>
             
@@ -852,7 +838,7 @@ graph TD
                 <button id="askAiButton" class="bg-[var(--cor-bordo-principal)] hover:bg-[var(--cor-bordo-hover)] text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out flex-1">
                     Perguntar à IA
                 </button>
-                <button id="summarizeMapButton" class="bg-[var(--cor-dourado-principal)] hover:bg-[var(--cor-dourado-texto)] text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out flex-1">
+                <button id="summarizeMapButton" class="bg-[var(--cor-dourado-principal)] hover:bg-[var(--cor-dourado-hover)] text-[var(--cor-dourado-texto)] hover:text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out flex-1">
                     Resumir Mapa Atual ✨
                 </button>
             </div>
@@ -871,19 +857,16 @@ graph TD
             </div>
         </div>
     </main>
-    </div> <!-- Fim do .main-container -->
-
-
-    <script>
+    </div> <script>
         mermaid.initialize({ startOnLoad: false }); 
 
         let currentMapId = null; 
         let currentLink = null;
         let currentActiveMermaidPreElement = null; 
         let currentScale = 1.0;
-        const scaleStep = 0.2; // Aumentado o passo do zoom
+        const scaleStep = 0.2;
         const minScale = 0.2; 
-        const maxScale = 5.0; // Aumentado o zoom máximo
+        const maxScale = 5.0; 
 
         function applyZoom() {
             if (currentActiveMermaidPreElement) { 
@@ -929,7 +912,7 @@ graph TD
             });
 
             if (currentLink) {
-                currentLink.classList.remove('active', 'bg-[#efebe9]', 'text-[var(--cor-bordo-principal)]', 'border-[var(--cor-bordo-principal)]');
+                currentLink.classList.remove('active', 'bg-[#e1bee7]', 'text-[var(--cor-bordo-principal)]', 'border-[var(--cor-bordo-principal)]');
                 currentLink.classList.add('text-[var(--cor-texto-secundario)]');
             }
             
@@ -942,7 +925,7 @@ graph TD
                 }
 
 
-                linkElement.classList.add('active', 'bg-[#efebe9]', 'text-[var(--cor-bordo-principal)]', 'border-[var(--cor-bordo-principal)]');
+                linkElement.classList.add('active', 'bg-[#e1bee7]', 'text-[var(--cor-bordo-principal)]', 'border-[var(--cor-bordo-principal)]');
                 linkElement.classList.remove('text-[var(--cor-texto-secundario)]');
                 currentLink = linkElement;
                 currentMapId = mapWrapperId; 
@@ -954,12 +937,12 @@ graph TD
                     const mermaidCodeElementId = currentActiveMermaidPreElement.id;
                     let mermaidCode = currentActiveMermaidPreElement.dataset.originalCode;
 
-                    if (!mermaidCode) { // Se o código original não foi armazenado, pega do textContent
+                    if (!mermaidCode) { 
                         mermaidCode = currentActiveMermaidPreElement.textContent;
                         currentActiveMermaidPreElement.dataset.originalCode = mermaidCode; 
                     }
                     
-                    currentActiveMermaidPreElement.innerHTML = '<div class="flex justify-center items-center h-full"><svg class="animate-spin h-8 w-8 text-[var(--cor-bordo-principal)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>'; 
+                    currentActiveMermaidPreElement.innerHTML = '<div class="flex justify-center items-center h-full w-full"><svg class="animate-spin h-10 w-10 text-[var(--cor-bordo-principal)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>'; 
                     currentActiveMermaidPreElement.removeAttribute('data-processed');
 
                     if (!mermaidCode || mermaidCode.trim() === '') {
@@ -976,7 +959,15 @@ graph TD
                             if (bindFunctions) {
                                 bindFunctions(currentActiveMermaidPreElement); 
                             }
-                            setTimeout(applyZoom, 50); 
+                            // Aplica o zoom inicial/resetado após o SVG ser inserido
+                            // É importante que o SVG exista antes de chamar applyZoom
+                            const svgElement = currentActiveMermaidPreElement.querySelector('svg');
+                            if (svgElement) {
+                                svgElement.style.transformOrigin = '0 0'; // Garante a origem do zoom
+                                applyZoom(); // Aplica a escala atual (que foi resetada para 1.0)
+                            } else {
+                                console.warn("SVG element not found immediately after render for " + mermaidCodeElementId);
+                            }
                         } catch (err) {
                             console.error("Mermaid rendering error on " + mermaidCodeElementId + ":", err);
                             currentActiveMermaidPreElement.innerHTML = 
@@ -987,7 +978,7 @@ graph TD
                                 `<pre class="text-xs mt-1 whitespace-pre-wrap bg-gray-100 p-2 rounded">${mermaidCode.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>` +
                                 `</div>`;
                         }
-                    }, 150); // Aumentado o delay para renderização mais complexa
+                    }, 150); 
                 }
                 document.getElementById('aiResponseArea').innerHTML = 'Aguardando sua pergunta...';
                 document.getElementById('aiQueryInput').value = '';
@@ -1126,7 +1117,7 @@ graph TD
                     const text = result.candidates[0].content.parts[0].text;
                     aiResponseArea.innerHTML = text.replace(/\n/g, '<br>'); 
                 } else {
-                    aiResponseArea.innerHTML = '<p class="text-red-500">Não foi possível obter um resumo da IA ou o resumo estava vazio.</p>';
+                    aiResponseArea.innerHTML = '<p class="text-red-500">Não foi possível obter um resumo da IA ou o resumo estava vazia.</p>';
                      console.error('Unexpected API response structure for summarization:', result);
                 }
             } catch (error) {
