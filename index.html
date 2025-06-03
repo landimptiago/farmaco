@@ -1,0 +1,1215 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapas Mentais - Farmacologia P2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-bordo-principal: #800020; /* Bordô Principal */
+            --cor-bordo-hover: #600018;    /* Bordô Mais Escuro para Hover */
+            --cor-bordo-claro: #A04050;   /* Bordô Claro para Destaques */
+            --cor-dourado-principal: #FFD700; /* Dourado Principal */
+            --cor-dourado-texto: #B8860B;   /* Dourado Escuro para Texto */
+            --cor-fundo-geral: #fdf6e3; /* Um tom creme/bege para o fundo */
+            --cor-fundo-container: #fffaf0; /* Branco antigo/floral para containers */
+            --cor-texto-principal: #5d4037; /* Marrom escuro para texto */
+            --cor-texto-secundario: #795548; /* Marrom médio para texto secundário */
+            --cor-borda-suave: #d7ccc8; /* Borda marrom clara */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cor-fundo-geral); 
+            color: var(--cor-texto-principal);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden; 
+        }
+        .main-container {
+            display: flex;
+            flex: 1; 
+            overflow: hidden; 
+        }
+        #sidebar {
+            width: 288px; 
+            transition: width 0.3s ease-in-out;
+            flex-shrink: 0; 
+            background-color: var(--cor-fundo-container);
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--cor-borda-suave);
+        }
+        #sidebar.minimized {
+            width: 80px; 
+        }
+        #sidebar.minimized .sidebar-text,
+        #sidebar.minimized .nav-link-text,
+        #sidebar.minimized #sidebarTitle {
+            display: none;
+        }
+        #sidebar .nav-link svg.icon {
+            flex-shrink: 0; 
+            color: var(--cor-bordo-principal);
+        }
+        #sidebar.minimized .nav-link {
+            justify-content: center; 
+        }
+        #sidebar.minimized .nav-link .icon {
+            margin-right: 0;
+        }
+
+        #mainContent {
+            flex-grow: 1;
+            overflow-y: auto; 
+            padding: 1.5rem; /* Aumentado padding */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #mapDisplayArea {
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column;
+            min-height: 0; 
+        }
+
+        #mermaidZoomWrapper {
+            width: 100%;
+            min-height: 70vh; /* Aumentado para dar mais espaço ao mapa */
+            flex-grow: 1; 
+            overflow: hidden; 
+            display: block; 
+            border: 1px solid var(--cor-borda-suave); 
+            border-radius: 0.5rem;
+            background-color: #f5f5f5; /* Fundo levemente cinza para o wrapper do mapa */
+            padding: 0.5rem; 
+        }
+
+        pre.mermaid {
+            background-color: var(--cor-fundo-container);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            /* box-shadow: 0 4px 6px rgba(0,0,0,0.05); Removido para um look mais flat */
+            text-align: left; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            display: block; 
+        }
+        
+        pre.mermaid svg { 
+            display: block; 
+            max-width: none; 
+            width: auto; 
+            height: auto; 
+            transition: transform 0.2s ease-out; 
+            transform-origin: 0 0; 
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            display: flex; 
+            align-items: center; 
+            padding: 0.5rem 1rem; /* Diminuído padding vertical */
+            color: var(--cor-texto-secundario);
+            border-radius: 0.375rem;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: #efebe9; /* Bege claro para hover/active */
+            border-left-color: var(--cor-bordo-principal); 
+            color: var(--cor-bordo-principal); 
+        }
+        .nav-link .icon {
+            margin-right: 0.75rem; 
+        }
+        
+        .content-container {
+            background-color: var(--cor-fundo-container);
+            border-radius: 0.75rem;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08); /* Sombra mais suave */
+            border: 1px solid var(--cor-borda-suave);
+        }
+        
+        ::-webkit-scrollbar {
+            width: 10px; 
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #eee; 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1a288; /* Tom de marrom para scrollbar */
+            border-radius: 10px;
+            border: 2px solid #eee; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a4876c; 
+        }
+        #aiAssistantSection {
+            flex-shrink: 0; 
+            /* max-height: 25vh; Reduzido ainda mais */
+            display: flex;
+            flex-direction: column;
+            margin-top: 1.5rem; 
+        }
+        .ai-buttons-container {
+            display: flex;
+            gap: 0.75rem; /* Aumentado gap */
+            margin-bottom: 1rem;
+        }
+        #aiResponseArea {
+            flex-grow: 1; 
+            overflow-y: auto;
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+            background-color: #fdfdfd; 
+            min-height: 60px; 
+            padding: 0.75rem; 
+            border: 1px solid var(--cor-borda-suave); 
+            border-radius: 0.375rem; 
+        }
+        .zoom-button {
+            background-color: var(--cor-bordo-principal); 
+            color: white;
+            font-weight: 500; /* Ajustado peso da fonte */
+            padding: 0.4rem 0.8rem; /* Diminuído padding */
+            border-radius: 0.375rem;
+            margin: 0 0.15rem; /* Diminuído margem */
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .zoom-button:hover {
+            background-color: var(--cor-bordo-hover); 
+        }
+        .toggle-menu-button {
+            background-color: var(--cor-bordo-claro); 
+            color: white;
+            padding: 0.75rem; 
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            text-align: left;
+            display: flex; 
+            align-items: center; 
+        }
+        #sidebar.minimized .toggle-menu-button {
+            justify-content: center; 
+        }
+        .toggle-menu-button:hover {
+            background-color: var(--cor-bordo-principal);
+        }
+        .sidebar-footer {
+            margin-top: auto; /* Empurra para o final */
+            padding-top: 1rem;
+            border-top: 1px solid var(--cor-borda-suave);
+            text-align: center;
+        }
+        .sidebar-footer img {
+            max-width: 100px; /* Ajuste o tamanho conforme necessário */
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+            border: 2px solid var(--cor-dourado-principal);
+        }
+        .sidebar-footer p {
+            font-weight: 600;
+            color: var(--cor-bordo-principal);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Navegação Lateral -->
+        <nav id="sidebar" class="p-4 flex flex-col">
+            <div> <!-- Wrapper para conteúdo superior do sidebar para permitir footer fixo -->
+                <button id="toggleMenuBtn" class="toggle-menu-button mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 inline-block">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                    <span class="sidebar-text ml-2">Recolher Menu</span>
+                </button>
+                <h2 id="sidebarTitle" class="text-2xl font-bold text-[var(--cor-bordo-principal)] mb-6 border-b border-[var(--cor-borda-suave)] pb-3 sidebar-text">Farmacologia P2</h2>
+                <ul class="space-y-1 flex-grow overflow-y-auto">
+                    <li><a href="#" class="nav-link" onclick="showMap('map10_11_wrapper', this)"> <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg> <span class="nav-link-text">Aula 10/11: 5-HT e NE</span></a></li>
+                    <li><a href="#" class="nav-link" onclick="showMap('map12_wrapper', this)"> <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg> <span class="nav-link-text">Aula 12: GABA e Glutamato</span></a></li>
+                    <li><a href="#" class="nav-link" onclick="showMap('map13_wrapper', this)"> <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span class="nav-link-text">Aula 13: Dopaminérgica</span></a></li>
+                    <li><a href="#" class="nav-link" onclick="showMap('map14_wrapper', this)"> <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> <span class="nav-link-text">Aula 14: Anticonvulsivantes</span></a></li>
+                    <li><a href="#" class="nav-link" onclick="showMap('map15_wrapper', this)"> <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-12v4m-2-2h4m5 4v4m-2-2h4M17 3v4m-2-2h4M5 21v-4m2 2H3m14-4v4m2-2h-4"></path></svg> <span class="nav-link-text">Aula 15: Analgésicos Opioides</span></a></li>
+                    <li><a href="#" class="nav-link" onclick="showMap('map16_wrapper', this)"> <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2.5m0 0V17m0-2.5C4 14.5 4 14 4 14M10 14v2.5m0 0c0 1.5-1.5 1.5-1.5 1.5H6.75m0 0H5.25m0 0H3.75m0 0V11.5m0 0c0-1.5 1.5-1.5 1.5-1.5H8.25m0 0H9.75m0 0H12m0 0V9.5m0 0c0-1.5-1.5-1.5-1.5-1.5H8.25m0 0H6.75M17 14v-2.5m0 0c0-1.5-1.5-1.5-1.5-1.5H14m2.5 0c0 .828-.672 1.5-1.5 1.5M17 14v2.5m0 0c0 1.5 1.5 1.5 1.5 1.5h1.25m0 0H20.5m0 0H22.25m0 0V11.5m0 0c0-1.5-1.5-1.5-1.5-1.5H19.75m0 0H18.25m0 0H16m0 0V9.5m0 0c0-1.5 1.5-1.5 1.5-1.5H19.75m0 0H21.25"></path></svg> <span class="nav-link-text">Aula 16: Anestésicos</span></a></li>
+                    <li><a href="#" class="nav-link" onclick="showMap('map17_wrapper', this)"> <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> <span class="nav-link-text">Aula 17: Farmacologia do Sangue</span></a></li>
+                    <li><a href="#" class="nav-link" onclick="showMap('map18_wrapper', this)"> <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7.014A7.962 7.962 0 0112 2c2.295 0 4.45.783 6.146 2.143L12 12l5.657 6.657z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657L12 12m5.657 6.657l-2.829-2.828m0 0a2 2 0 10-2.828 2.828l2.829-2.828z"></path></svg> <span class="nav-link-text">Aula 18: Anti-histamínicos</span></a></li>
+                </ul>
+            </div>
+            <div class="sidebar-footer p-4">
+                <img src="https://placehold.co/100x100/800020/FFD700?text=CARONAS&font=impact" alt="Logo da Turma Caronas" class="mx-auto">
+                <p class="sidebar-text">Caronas</p>
+            </div>
+        </nav>
+
+        <!-- Área de Conteúdo Principal -->
+        <div id="mainContent">
+            <div id="welcomeMessage" class="content-container p-6 md:p-10 text-center flex-grow flex flex-col justify-center items-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-[var(--cor-bordo-principal)] mb-4">Bem-vindo(a) aos Mapas Mentais de Farmacologia!</h1>
+                <p class="text-lg text-[var(--cor-texto-secundario)]">Selecione uma aula no menu ao lado para visualizar o mapa mental correspondente.</p>
+                <img src="https://placehold.co/500x300/A04050/FFD700?text=Farmacologia+Interativa&font=inter" alt="Ilustração de Farmacologia" class="mt-8 mx-auto rounded-lg shadow-md">
+            </div>
+
+            <div id="mapDisplayArea" class="hidden flex-grow flex flex-col content-container p-2 md:p-4">
+                <h1 id="mapTitle" class="text-xl md:text-2xl font-bold text-[var(--cor-bordo-principal)] mb-4 text-center flex-shrink-0"></h1>
+                
+                <div id="zoomControls" class="flex items-center justify-center space-x-2 my-2 flex-shrink-0">
+                    <button id="zoomOutBtn" class="zoom-button">-</button>
+                    <button id="zoomResetBtn" class="zoom-button">Resetar</button>
+                    <button id="zoomInBtn" class="zoom-button">+</button>
+                </div>
+
+                <div id="mermaidZoomWrapper" class="flex-grow"> 
+                    <div id="map10_11_wrapper" class="map-content hidden mermaid-container-wrapper"><pre class="mermaid" id="map10_11_mermaid_code">
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#4E342E', 'primaryBorderColor': '#D1C4E9', 'lineColor': '#795548', 'secondaryColor': '#FBE9E7', 'tertiaryColor': '#EFEBE9', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#FFF8E1', 'clusterBkg': '#FFFDE7'}}}%%
+graph TD
+    classDef aulaNode fill:#A04050,stroke:#600018,color:#fff,font-weight:bold
+    classDef topicoNode fill:#FFD700,stroke:#B8860B,color:#5d4037
+    classDef subTopicoNode fill:#D2B48C,stroke:#8B4513,color:#5d4037
+    classDef detalheNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037
+    classDef farmacoNode fill:#F5F5DC,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef obsNode fill:#FFF8DC,stroke:#DAA520,color:#5d4037,font-style:italic
+    classDef questaoNode fill:#FFE4B5,stroke:#D2691E,color:#5d4037,font-style:italic
+    classDef warningNode fill:#FFC0CB,stroke:#800020,color:#800020,font-weight:bold
+
+    A["Aula 10/11: Neurotransmissão 5-HT e NE"]:::aulaNode --> B["Transtornos Afetivos"]:::topicoNode;
+    A --> C["Antidepressivos"]:::topicoNode;
+    A --> D["Estabilizadores de Humor"]:::topicoNode;
+
+    B --> B1["Depressão Maior"]:::subTopicoNode;
+    B1 --> B1a["Hipótese Monoaminérgica: ↓5-HT, ↓NE, ↓DA"]:::detalheNode;
+    B1a --> B1a1["Limitações: Defasagem Terapêutica"]:::obsNode;
+    B1 --> B1b["Defasagem Terapêutica: 3-4 semanas"]:::detalheNode;
+    B1b --> B1b1["Mecanismos: Dessensibilização Autorreceptores Pré, Infrarregulação Pós, Adaptações Longo Prazo"]:::detalheNode;
+    B1 --> B1c["Papel Neurotrofinas: BDNF"]:::detalheNode;
+    B1c --> B1c1["Estresse ↓BDNF --> ↓Neurogênese"]:::detalheNode;
+    B1c --> B1c2["Antidepressivos ↑BDNF --> ↑Neurogênese"]:::detalheNode;
+
+    B --> B2["Transtorno Bipolar"]:::subTopicoNode;
+    B2 --> B2a["Alternância Depressão/Mania"]:::detalheNode;
+    B2 --> B2b["Antidepressivos em TAB: Risco de Mania --> Evitar Monoterapia"]:::obsNode;
+    B2b --> B2b1["Prevenção: Estabilizadores de Humor"]:::detalheNode;
+
+    C --> C1["ISRS"]:::subTopicoNode;
+    C1 --> C1a["Mecanismo: Bloqueio Seletivo Recaptação 5-HT"]:::detalheNode;
+    C1 --> C1b["Fármacos: Fluoxetina, Sertralina, Paroxetina"]:::farmacoNode;
+    C1 --> C1c["Efeitos Adversos: Náusea, Disfunção Sexual"]:::obsNode;
+    C1 --> C1d["Síndrome Descontinuação: Paroxetina > Fluoxetina"]:::obsNode;
+
+    C --> C2["ADTs"]:::subTopicoNode;
+    C2 --> C2a["Mecanismo: Inibem Recaptação NE e 5-HT; Bloqueio M, H1, α1"]:::detalheNode;
+    C2 --> C2b["Fármacos: Imipramina, Amitriptilina, Nortriptilina"]:::farmacoNode;
+    C2 --> C2c["Efeitos Adversos: Anticolinérgicos, Sedação, Hipotensão, Cardiotoxicidade"]:::obsNode;
+
+    C --> C3["IRSN"]:::subTopicoNode;
+    C3 --> C3a["Mecanismo: Bloqueio Recaptação 5-HT e NE"]:::detalheNode;
+    C3 --> C3b["Fármacos: Venlafaxina, Duloxetina"]:::farmacoNode;
+    C3 --> C3c["Efeitos Adversos: Semelhante ISRS, ↑PA"]:::obsNode;
+
+    C --> C4["IMAO"]:::subTopicoNode;
+    C4 --> C4a["Mecanismo: Inibem MAO --> ↑5-HT, NE, DA"]:::detalheNode;
+    C4 --> C4b["Fármacos: Tranilcipromina, Fenelzina"]:::farmacoNode;
+    C4 --> C4c["Efeitos Adversos: Hipotensão Postural"]:::obsNode;
+    C4 --> C4d["Cuidados: Dieta Tiramina - Reação do Queijo, Interações --> Síndrome Serotoninérgica"]:::warningNode;
+
+    C --> C5["Escetamina (Spravato)"]:::farmacoNode;
+    C5 --> C5a["Mecanismo: Antagonista NMDA"]:::detalheNode;
+    C5 --> C5b["Efeito: Antidepressivo Rápido, Ideação Suicida"]:::detalheNode;
+
+    D --> D1["Lítio (Carbonato de Lítio)"]:::farmacoNode;
+    D1 --> D1a["Mecanismo: Múltiplo --> ↓IP3, Modula Proteínas G, ↑5-HT, ↓NE/DA, ↑BDNF"]:::detalheNode;
+    D1 --> D1b["Índice Terapêutico Estreito: 0,75-1,5 mmol/L"]:::obsNode;
+    D1 --> D1c["Efeitos Adversos: Náusea, Poliúria, Nefrotoxicidade, Ganho de Peso, Tremor, Teratogênese"]:::warningNode;
+    D1 --> D1d["Monitoramento: Litemia, Função Renal/Tireoidiana"]:::obsNode;
+
+    D --> D2["Anticonvulsivantes: Ácido Valproico, Carbamazepina, Lamotrigina"]:::farmacoNode;
+    D --> D3["Antipsicóticos Atípicos: Olanzapina, Risperidona, Quetiapina, Aripiprazol"]:::farmacoNode;
+
+    B1a1 --> QN1["QN1: Limitações Hip. Monoaminérgica"]:::questaoNode;
+    B1b1 --> QN2["QN2: Justificativa Defasagem Terapêutica"]:::questaoNode;
+    B1c2 --> QN3["QN3: BDNF e Efeito Antidepressivo"]:::questaoNode;
+    C4d --> QN4["QN4: Efeitos Adversos e Cuidados IMAO"]:::questaoNode;
+    B2b --> QN5["QN5: Antidepressivos e Mania no TAB"]:::questaoNode;
+    D1a --> QN6["QN6: Mecanismo do Lítio"]:::questaoNode;
+    D1c --> QN7["QN7: Efeitos Adversos e Monitoramento Lítio"]:::questaoNode;
+    C1d --> QN8["QN8: Farmacocinética e Síndrome Descontinuação ISRS"]:::questaoNode;
+                </pre></div>
+
+                <div id="map12_wrapper" class="map-content hidden mermaid-container-wrapper"><pre class="mermaid" id="map12_mermaid_code">
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#4E342E', 'primaryBorderColor': '#D1C4E9', 'lineColor': '#795548', 'secondaryColor': '#FBE9E7', 'tertiaryColor': '#EFEBE9', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#FFF8E1', 'clusterBkg': '#FFFDE7'}}}%%
+graph TD
+    classDef aulaNode fill:#A04050,stroke:#600018,color:#fff,font-weight:bold
+    classDef topicoNode fill:#FFD700,stroke:#B8860B,color:#5d4037
+    classDef subTopicoNode fill:#D2B48C,stroke:#8B4513,color:#5d4037
+    classDef detalheNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037
+    classDef farmacoNode fill:#F5F5DC,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef obsNode fill:#FFF8DC,stroke:#DAA520,color:#5d4037,font-style:italic
+    classDef questaoNode fill:#FFE4B5,stroke:#D2691E,color:#5d4037,font-style:italic
+    classDef warningNode fill:#FFC0CB,stroke:#800020,color:#800020,font-weight:bold
+
+    A["Aula 12: Neurotransmissão GABA e Glutamato"]:::aulaNode --> B["GABA - Inibitório"]:::topicoNode;
+    A --> C["Glutamato - Excitatório"]:::topicoNode;
+    A --> D["Fármacos GABAérgicos"]:::topicoNode;
+    A --> E["Tratamento da Ansiedade"]:::topicoNode;
+
+    B --> B1["Papel na Ansiedade: Regula Amígdala, Circuitos CSTC"]:::detalheNode;
+    B1 --> QN1_12["QN1: GABA e Regulação da Ansiedade"]:::questaoNode;
+    B --> B2["Receptores GABA"]:::subTopicoNode;
+    B2 --> B2a["GABA_A: Ionotrópico Cl- --> Alvo BDZ, Barbitúricos, Z-Compounds"]:::detalheNode;
+    B2 --> B2b["GABA_B: Metabotrópico"]:::detalheNode;
+
+    C --> C1["Excitotoxicidade: Morte Neuronal --> Alzheimer, AVC"]:::detalheNode;
+    C --> C2["Memantina"]:::farmacoNode;
+    C2 --> C2a["Mecanismo: Antagonista NMDA --> ↓Excitotoxicidade"]:::detalheNode;
+
+
+    D --> D1["Benzodiazepínicos (BDZs)"]:::subTopicoNode;
+    D1 --> D1a["Mecanismo: Moduladores Alostéricos Positivos GABA_A --> ↑Frequência Abertura Canal Cl-"]:::detalheNode;
+    D1a --> QN2_12["QN2: Mecanismo BDZ --> Efeito Ansiolítico/Sedativo"]:::questaoNode;
+    D1 --> D1b["Fármacos: Diazepam, Lorazepam, Alprazolam, Clonazepam, Midazolam"]:::farmacoNode;
+    D1 --> D1c["Efeitos: Ansiolítico, Sedativo-Hipnótico, Relaxante Muscular, Anticonvulsivante"]:::detalheNode;
+    D1 --> D1d["Segurança vs. Barbitúricos: BDZ têm teto"]:::obsNode;
+    D1d --> QN7_12["QN7: Segurança BDZ vs. Barbitúricos"]:::questaoNode;
+    D1 --> D1e["Efeitos Adversos: Sonolência, Amnésia"]:::obsNode;
+    D1 --> D1f["Uso Prolongado: Tolerância, Dependência, Abstinência"]:::warningNode;
+    D1f --> QN3_12["QN3: Efeitos Adversos e Riscos Uso Prolongado BDZ"]:::questaoNode;
+    D1 --> D1g["Flumazenil (Antagonista BDZ)"]:::farmacoNode;
+
+    D --> D2["Compostos Z"]:::subTopicoNode;
+    D2 --> D2a["Mecanismo: Moduladores GABA_A Seletivos α1 --> Sedação"]:::detalheNode;
+    D2 --> D2b["Fármacos: Zolpidem, Zopiclone, Eszopiclone, Zaleplon"]:::farmacoNode;
+    D2 --> D2c["Indicação: Insônia --> Preferidos sobre BDZ"]:::detalheNode;
+    D2c --> QN8_12["QN8: Compostos Z para Insônia vs. Ansiedade"]:::questaoNode;
+    D2 --> D2d["Menor Potencial Dependência"]:::obsNode;
+
+    D --> D3["Barbitúricos"]:::subTopicoNode;
+    D3 --> D3a["Mecanismo: Moduladores GABA_A --> Prolongam Abertura Canal Cl-; Ativação Direta Altas Doses"]:::detalheNode;
+    D3 --> D3b["Fármacos: Fenobarbital, Tiopental"]:::farmacoNode;
+    D3 --> D3c["Desvantagens: Baixo Índice Terapêutico, Depressão Respiratória"]:::warningNode;
+
+    E --> E1["BDZs: Agudo, Curto Prazo"]:::detalheNode;
+    E --> E2["ISRS/IRSN: Crônico, Primeira Linha"]:::detalheNode;
+    E2 --> QN5_12["QN5: ISRS/IRSN como Ansiolíticos"]:::questaoNode;
+    E --> E3["Buspirona: Agonista Parcial 5-HT1A"]:::farmacoNode;
+    E3 --> QN4_12["QN4: Mecanismo Buspirona vs. BDZ"]:::questaoNode;
+    B1 --> QN6_12["QN6: Regiões Cerebrais Medo/Preocupação"]:::questaoNode;
+                </pre></div>
+
+                <div id="map13_wrapper" class="map-content hidden mermaid-container-wrapper"><pre class="mermaid" id="map13_mermaid_code">
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#4E342E', 'primaryBorderColor': '#D1C4E9', 'lineColor': '#795548', 'secondaryColor': '#FBE9E7', 'tertiaryColor': '#EFEBE9', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#FFF8E1', 'clusterBkg': '#FFFDE7'}}}%%
+graph TD
+    classDef aulaNode fill:#A04050,stroke:#600018,color:#fff,font-weight:bold
+    classDef topicoNode fill:#FFD700,stroke:#B8860B,color:#5d4037
+    classDef subTopicoNode fill:#D2B48C,stroke:#8B4513,color:#5d4037
+    classDef detalheNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037
+    classDef farmacoNode fill:#F5F5DC,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef obsNode fill:#FFF8DC,stroke:#DAA520,color:#5d4037,font-style:italic
+    classDef questaoNode fill:#FFE4B5,stroke:#D2691E,color:#5d4037,font-style:italic
+    classDef warningNode fill:#FFC0CB,stroke:#800020,color:#800020,font-weight:bold
+
+    A["Aula 13: Neurotransmissão Dopaminérgica"]:::aulaNode --> B["Vias Dopaminérgicas"]:::topicoNode;
+    A --> C["Esquizofrenia"]:::topicoNode;
+    A --> D["Doença de Parkinson"]:::topicoNode;
+
+    B --> B1["Nigroestriatal: Controle Motor --> Parkinson"]:::detalheNode;
+    B --> B2["Mesolímbica: Comportamento, Emoções --> Sintomas Positivos Esquizofrenia"]:::detalheNode;
+    B --> B3["Mesocortical: Cognição, Função Executiva --> Sintomas Negativos Esquizofrenia"]:::detalheNode;
+    B --> B4["Tuberoinfundibular: Controle Prolactina --> Efeitos Adversos Antipsicóticos"]:::detalheNode;
+
+    C --> C1["Fisiopatologia - Hipótese Dopaminérgica"]:::subTopicoNode;
+    C1 --> C1a["Hiperfunção Mesolímbica --> Sintomas Positivos"]:::detalheNode;
+    C1 --> C1b["Hipofunção Mesocortical --> Sintomas Negativos/Cognitivos"]:::detalheNode;
+    C1 --> QN1_13["QN1: Hipótese Dopaminérgica Esquizofrenia"]:::questaoNode;
+
+    C --> C2["Antipsicóticos"]:::subTopicoNode;
+    C2 --> C2a["Típicos - 1ª Geração"]:::detalheNode;
+    C2a --> C2a1["Mecanismo: Antagonistas D2"]:::detalheNode;
+    C2a1 --> C2a1a["Eficácia: ↓Sintomas Positivos via Mesolímbica"]:::detalheNode;
+    C2a1 --> C2a1b["Efeitos Adversos: Extrapiramidais, Agravamento Sintomas Negativos, Hiperprolactinemia"]:::warningNode;
+    C2a1b --> QN2_13["QN2: Mecanismo e Efeitos Adversos Antipsicóticos Típicos"]:::questaoNode;
+    C2a1b --> QN4_13["QN4: Discinesia Tardia e Hiperprolactinemia"]:::questaoNode;
+    C2a --> C2a2["Fármacos: Haloperidol, Clorpromazina"]:::farmacoNode;
+
+    C2 --> C2b["Atípicos - 2ª Geração"]:::detalheNode;
+    C2b --> C2b1["Mecanismo: Antagonistas D2 + Antagonistas 5-HT2A / Agonistas Parciais 5-HT1A / Rápida Dissociação D2"]:::detalheNode;
+    C2b1 --> C2b1a["Eficácia: ↓Sintomas Positivos e Negativos"]:::detalheNode;
+    C2b1 --> C2b1b["Menos Efeitos Extrapiramidais e Endócrinos"]:::obsNode;
+    C2b1b --> QN5_13["QN5: Redução Efeitos Adversos Atípicos"]:::questaoNode;
+    C2b --> C2b2["Fármacos: Risperidona, Olanzapina, Quetiapina, Clozapina"]:::farmacoNode;
+    C2 --> C2c["Estabilizador Dopaminérgico (3ª Geração)"]:::detalheNode;
+    C2c --> C2c1["Fármaco: Aripiprazol"]:::farmacoNode;
+    C2c --> C2c2["Mecanismo: Agonista Parcial D2"]:::detalheNode;
+    C2a & C2b --> QN3_13["QN3: Comparação Típicos vs. Atípicos"]:::questaoNode;
+
+    D --> D1["Fisiopatologia: Degeneração Neurônios Dopaminérgicos Via Nigroestriatal --> ↓Dopamina no Estriado"]:::subTopicoNode;
+    D1 --> QN6_13["QN6: Degeneração Nigroestriatal e Sintomas Parkinson"]:::questaoNode;
+    D --> D2["Tratamento Sintomático"]:::subTopicoNode;
+    D2 --> D2a["Levodopa + Carbidopa"]:::farmacoNode;
+    D2a --> D2a1["Mecanismo Levodopa: Precursor DA, atravessa BHE"]:::detalheNode;
+    D2a --> D2a2["Mecanismo Carbidopa: Inibidor DOPA-descarboxilase periférica --> ↑L-DOPA no SNC, ↓Efeitos Adversos Periféricos"]:::detalheNode;
+    D2a --> QN7_13["QN7: Mecanismo Levodopa/Carbidopa"]:::questaoNode;
+    D2a --> D2a3["Efeito Liga/Desliga: Flutuações motoras com uso crônico"]:::obsNode;
+    D2a3 --> QN9_13["QN9: Efeito Liga/Desliga Levodopa"]:::questaoNode;
+    D2 --> D2b["Agonistas Dopaminérgicos"]:::farmacoNode;
+    D2b --> D2b1["Mecanismo: Ativação Direta Receptores DA"]:::detalheNode;
+    D2b --> D2b2["Fármacos: Pramipexol, Ropinirol"]:::farmacoNode;
+    D2b --> D2b3["Vantagens: Não dependem de conversão, Menor flutuação"]:::obsNode;
+    D2a & D2b --> QN8_13["QN8: Comparação Levodopa vs. Agonistas DA"]:::questaoNode;
+    D2 --> D2c["Inibidores da MAO-B: Selegilina, Rasagilina"]:::farmacoNode;
+    D2 --> D2d["Inibidores da COMT: Entacapona, Tolcapona"]:::farmacoNode;
+                </pre></div>
+
+                <div id="map14_wrapper" class="map-content hidden mermaid-container-wrapper"><pre class="mermaid" id="map14_mermaid_code">
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#4E342E', 'primaryBorderColor': '#D1C4E9', 'lineColor': '#795548', 'secondaryColor': '#FBE9E7', 'tertiaryColor': '#EFEBE9', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#FFF8E1', 'clusterBkg': '#FFFDE7'}}}%%
+graph TD
+    classDef aulaNode fill:#A04050,stroke:#600018,color:#fff,font-weight:bold
+    classDef topicoNode fill:#FFD700,stroke:#B8860B,color:#5d4037
+    classDef subTopicoNode fill:#D2B48C,stroke:#8B4513,color:#5d4037
+    classDef detalheNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037
+    classDef farmacoNode fill:#F5F5DC,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef obsNode fill:#FFF8DC,stroke:#DAA520,color:#5d4037,font-style:italic
+    classDef questaoNode fill:#FFE4B5,stroke:#D2691E,color:#5d4037,font-style:italic
+    classDef warningNode fill:#FFC0CB,stroke:#800020,color:#800020,font-weight:bold
+
+    A["Aula 14: Anticonvulsivantes"]:::aulaNode --> B["Epilepsia"]:::topicoNode;
+    A --> C["Mecanismos de Ação Gerais"]:::topicoNode;
+    A --> D["Fármacos Específicos"]:::topicoNode;
+
+    B --> B1["Definição: Crises Convulsivas Recorrentes"]:::detalheNode;
+    B --> B2["Fisiopatologia: Desequilíbrio Excitatório/Inibitório --> ↓GABA / ↑Glutamato"]:::detalheNode;
+    B --> B3["Classificação das Crises"]:::subTopicoNode;
+    B3 --> B3a["Início Focal: Localizada ou Propagada"]:::detalheNode;
+    B3 --> B3b["Início Generalizado: Tônico-Clônica, Ausência, Mioclônica, Atônica"]:::detalheNode;
+    B3 --> QN1_14["QN1: Classificação Crises"]:::questaoNode;
+    B --> B4["Estado de Mal Epiléptico: Emergência --> Diazepam/Lorazepam IV"]:::warningNode;
+    B4 --> QN7_14["QN7: Estado de Mal Epiléptico - Emergência e Tratamento"]:::questaoNode;
+
+    C --> C1["Potencialização Ação GABA"]:::subTopicoNode;
+    C1 --> C1a["Moduladores Alostéricos GABA_A: Benzodiazepínicos, Barbitúricos"]:::detalheNode;
+    C1 --> C1b["Inibidores Metabolismo GABA (Inibe GABA-T): Vigabatrina"]:::farmacoNode;
+    C1 --> C1c["Inibidores Recaptação GABA (Inibe GAT-1): Tiagabina"]:::farmacoNode;
+    C1b & C1c --> QN5_14["QN5: Vigabatrina vs. Tiagabina"]:::questaoNode;
+
+    C --> C2["Inibição Canais de Na+ Voltagem-Dependentes"]:::subTopicoNode;
+    C2 --> C2a["Mecanismo: Ligam-se estado inativado --> ↓Recuperação canais --> Estabiliza membrana, ↓Disparos repetitivos"]:::detalheNode;
+    C2 --> QN2_14["QN2: Bloqueadores Canais Na+ e Controle Crises"]:::questaoNode;
+
+    C --> C3["Inibição Canais de Ca2+"]:::subTopicoNode;
+    C3 --> C3a["Tipo T - Baixa Voltagem (Crises de Ausência)"]:::detalheNode;
+    C3 --> C3b["Tipo P/Q - Alta Voltagem (↓Liberação Neurotransmissores Excitatórios)"]:::detalheNode;
+    C3b --> QN4_14["QN4: Inibidores Canais Ca2+ Alta Voltagem"]:::questaoNode;
+
+    C --> C4["Inibição Ação Glutamato"]:::subTopicoNode;
+
+    D --> D1["Fenitoína"]:::farmacoNode;
+    D1 --> D1a["Mecanismo Principal: Bloqueio Canais Na+"]:::detalheNode;
+    D1 --> D1b["Indicações: Tônico-clônicas, Focais"]:::detalheNode;
+    D1 --> D1c["Efeitos Adversos: Hiperplasia Gengival, Ataxia"]:::obsNode;
+    D1 --> D1d["Interações: Indutor CYP --> ↓Contraceptivos Orais; Teratogênica"]:::warningNode;
+
+    D --> D2["Carbamazepina"]:::farmacoNode;
+    D2 --> D2a["Mecanismo Principal: Bloqueio Canais Na+"]:::detalheNode;
+    D2 --> D2b["Indicações: Tônico-clônicas, Focais, Neuralgia Trigêmeo, TAB"]:::detalheNode;
+    D2 --> D2c["Efeitos Adversos: Sonolência, Ataxia, Discrasias Sanguíneas (Aplasia Medular)"]:::obsNode;
+    D2 --> D2d["Interações: Indutor CYP; Teratogênica"]:::warningNode;
+
+    D --> D3["Ácido Valproico / Divalproato"]:::farmacoNode;
+    D3 --> D3a["Mecanismos: Bloqueio Canais Na+, Bloqueio Canais Ca2+ Tipo T, Potencializa GABA"]:::detalheNode;
+    D3 --> QN6_14["QN6: Ácido Valproico - Amplo Espectro"]:::questaoNode;
+    D3 --> D3b["Indicações: Tônico-clônicas, Ausência, Mioclônicas, TAB, Enxaqueca"]:::detalheNode;
+    D3 --> D3c["Efeitos Adversos: Hepatotoxicidade, Teratogenia, Ganho de Peso"]:::warningNode;
+
+    D --> D4["Etossuximida"]:::farmacoNode;
+    D4 --> D4a["Mecanismo: Bloqueio Canais Ca2+ Tipo T"]:::detalheNode;
+    D4 --> QN3_14["QN3: Etossuximida e Crises de Ausência"]:::questaoNode;
+    D4 --> D4b["Indicação: Exclusiva Crises de Ausência"]:::detalheNode;
+
+    D --> D5["Lamotrigina"]:::farmacoNode;
+    D5 --> D5a["Mecanismos: Bloqueio Canais Na+, Bloqueio Canais Ca2+, ↓Liberação Glutamato"]:::detalheNode;
+    D5 --> D5b["Indicações: Focais, Generalizadas, Lennox-Gastaut, TAB"]:::detalheNode;
+    D5 --> D5c["Efeitos Adversos: Rash Cutâneo (Risco Stevens-Johnson com Valproato)"]:::warningNode;
+
+    D --> D6["Gabapentina / Pregabalina"]:::farmacoNode;
+    D6 --> D6a["Mecanismo: Bloqueio Canais Ca2+ Alta Voltagem (α2δ-1) --> ↓Liberação Glutamato"]:::detalheNode;
+    D6 --> D6b["Indicações: Adjuvante Crises Focais, Dor Neuropática"]:::detalheNode;
+
+    D --> D7["Benzodiazepínicos: Clonazepam, Diazepam, Lorazepam, Clobazam"]:::farmacoNode;
+    D7 --> D7a["Mecanismo: Moduladores GABA_A"]:::detalheNode;
+    D7 --> D7b["Indicações: Controle Agudo, Estado de Mal Epiléptico, Adjuvante (Clobazam)"]:::detalheNode;
+
+    D --> D8["Fenobarbital"]:::farmacoNode;
+    D8 --> D8a["Mecanismo: Modulador GABA_A"]:::detalheNode;
+    D8 --> D8b["Indicações: Focais, Generalizadas (Neonatos)"]:::detalheNode;
+
+    D --> D9["Topiramato"]:::farmacoNode;
+    D9 --> D9a["Mecanismos: Múltiplos (Bloq Na+, Pot GABA, Antag Glutamato)"]:::detalheNode;
+    D9 --> D9b["Indicações: Epilepsia, Enxaqueca"]:::detalheNode;
+    D9 --> D9c["Efeitos Adversos: Perda de peso, Parestesia, Acidose Metabólica"]:::obsNode;
+                </pre></div>
+
+                <div id="map15_wrapper" class="map-content hidden mermaid-container-wrapper"><pre class="mermaid" id="map15_mermaid_code">
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#4E342E', 'primaryBorderColor': '#D1C4E9', 'lineColor': '#795548', 'secondaryColor': '#FBE9E7', 'tertiaryColor': '#EFEBE9', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#FFF8E1', 'clusterBkg': '#FFFDE7'}}}%%
+graph TD
+    classDef aulaNode fill:#A04050,stroke:#600018,color:#fff,font-weight:bold
+    classDef topicoNode fill:#FFD700,stroke:#B8860B,color:#5d4037
+    classDef subTopicoNode fill:#D2B48C,stroke:#8B4513,color:#5d4037
+    classDef detalheNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037
+    classDef farmacoNode fill:#F5F5DC,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef obsNode fill:#FFF8DC,stroke:#DAA520,color:#5d4037,font-style:italic
+    classDef questaoNode fill:#FFE4B5,stroke:#D2691E,color:#5d4037,font-style:italic
+    classDef warningNode fill:#FFC0CB,stroke:#800020,color:#800020,font-weight:bold
+
+    A["Aula 15: Analgésicos Opioides"]:::aulaNode --> B["Dor e Nocicepção"]:::topicoNode;
+    A --> C["Receptores Opioides"]:::topicoNode;
+    A --> D["Opioides Endógenos e Exógenos"]:::topicoNode;
+    A --> E["Mecanismo de Ação Analgésica"]:::topicoNode;
+    A --> F["Classificação e Fármacos"]:::topicoNode;
+    A --> G["Farmacocinética e Vias de Administração"]:::topicoNode;
+    A --> H["Usos Terapêuticos Adicionais"]:::topicoNode;
+    A --> I["Efeitos Adversos"]:::topicoNode;
+    A --> J["Tolerância e Dependência"]:::topicoNode;
+    A --> K["Manejo Intoxicação"]:::topicoNode;
+
+    B --> B1["Definição Dor: Experiência Subjetiva"]:::detalheNode;
+    B --> B2["Nocicepção: Detecção Estímulos Nocivos"]:::detalheNode;
+    B --> B3["Vias Aferentes/Ascendentes: Periferia para SNC"]:::detalheNode;
+    B --> B4["Vias Eferentes/Descendentes: Modulação Inibitória"]:::detalheNode;
+    B --> QN1_15["QN1: Papel Opioides no Manejo da Dor"]:::questaoNode;
+
+    C --> C1["Tipos: μ (Mu), δ (Delta), κ (Kappa)"]:::subTopicoNode;
+    C1 --> C1a["Receptor μ: Principal para Analgesia, Sedação, Depressão Respiratória, Efeitos GI"]:::detalheNode;
+    C1a --> QN2_15["QN2: Papel Receptores μ na Modulação da Dor"]:::questaoNode;
+
+    D --> D1["Endógenos: Endorfinas, Encefalinas, Dinorfinas"]:::detalheNode;
+    D --> D2["Exógenos: Naturais (Morfina, Codeína), Semissintéticos (Hidromorfona, Oxicodona), Sintéticos (Fentanila, Metadona, Tramadol)"]:::farmacoNode;
+
+    E --> E1["Ativação Receptores μ, δ, κ"]:::detalheNode;
+    E1 --> E1a["Pré-sináptico: ↓Liberação Neurotransmissores Excitatórios (Glutamato, Subst. P) pela Inibição Canais Ca2+"]:::detalheNode;
+    E1 --> E1b["Pós-sináptico: Hiperpolarização pela Abertura Canais K+"]:::detalheNode;
+    E1 --> E1c["Supraespinhal: Ativação Vias Descendentes Inibitórias"]:::detalheNode;
+
+    F --> F1["Agonistas Fortes (μ)"]:::subTopicoNode;
+    F1 --> F1a["Fármacos: Morfina, Fentanila, Sufentanil, Remifentanil, Metadona, Meperidina, Hidromorfona, Oximorfona"]:::farmacoNode;
+    F --> F2["Agonistas Leves/Moderados (μ)"]:::subTopicoNode;
+    F2 --> F2a["Fármacos: Codeína, Oxicodona, Hidrocodona, Tramadol, Tapentadol"]:::farmacoNode;
+    F --> F3["Agonistas-Antagonistas Mistos / Agonistas Parciais"]:::subTopicoNode;
+    F3 --> F3a["Fármacos: Buprenorfina (agonista parcial μ, antagonista κ), Nalbufina (agonista κ, antagonista μ), Butorfanol"]:::farmacoNode;
+    F --> F4["Antagonistas"]:::subTopicoNode;
+    F4 --> F4a["Fármacos: Naloxona, Naltrexona, Nalmefeno"]:::farmacoNode;
+    F1 & F2 & F3 & F4 --> QN3_15["QN3: Diferenças Agonistas Totais, Parciais e Antagonistas"]:::questaoNode;
+
+    G --> G1["Vias: Oral, IV, IM, SC, Transdérmica, Retal, Mucosa Oral, Intratecal"]:::detalheNode;
+    G1 --> QN4_15["QN4: Importância Via de Administração"]:::questaoNode;
+    G --> G2["Metabolismo: Hepático (conjugação glicurônica, CYP), Excreção Renal"]:::detalheNode;
+    G --> G3["ACP - Analgesia Controlada pelo Paciente"]:::detalheNode;
+
+    H --> H1["Anestesiologia: Pré-anestésico, Adjuvante, Indutor"]:::detalheNode;
+    H --> H2["Antitussígenos: Codeína, Dextrometorfano"]:::farmacoNode;
+    H --> H3["Antidiarreicos: Loperamida, Difenoxilato"]:::farmacoNode;
+
+    I --> I1["Sedação, Euforia/Disforia, Alterações de Humor"]:::obsNode;
+    I --> I2["Depressão Respiratória (Principal Causa de Morte em Overdose)"]:::warningNode;
+    I --> I3["Miose (Constrição Pupilar)"]:::obsNode;
+    I --> I4["Náusea, Vômito (Estimulação Zona Quimiorreceptora)"]:::obsNode;
+    I --> I5["Constipação (↓Motilidade GI)"]:::obsNode;
+    I --> I6["Hipotensão Ortostática"]:::obsNode;
+    I --> I7["Hiperalgesia Induzida por Opioides (Uso Crônico)"]:::warningNode;
+    I --> QN5_15["QN5: Efeitos Adversos Uso Crônico"]:::questaoNode;
+
+    J --> J1["Tolerância: Perda Gradual Eficácia --> Necessidade ↑Dose"]:::detalheNode;
+    J --> J2["Dependência Física: Síndrome de Abstinência"]:::detalheNode;
+    J --> J3["Dependência Psicológica: Desejo, Compulsão (Vício)"]:::detalheNode;
+    J --> J4["Mecanismo Neurofisiológico: Ação Sistema Recompensa (Área Tegmentar Ventral, N. Accumbens) -> ↑Liberação Dopamina"]:::detalheNode;
+    J4 --> QN6_15["QN6: Mecanismo Neurofisiológico Abuso/Dependência"]:::questaoNode;
+
+    K --> K1["Intoxicação Aguda (Sobredose)"]:::subTopicoNode;
+    K1 --> K1a["Antagonistas: Naloxona (Curta Ação), Naltrexona (Longa Ação) -> Revertem Depressão Respiratória"]:::farmacoNode;
+    K --> K2["Intoxicação Crônica (Dependência/Abstinência)"]:::subTopicoNode;
+    K2 --> K2a["Agonistas Ação Longa: Metadona, Buprenorfina -> Aliviam Sintomas Abstinência (Programas de Manutenção)"]:::farmacoNode;
+    K1 & K2 --> QN7_15["QN7: Manejo Intoxicação Aguda e Crônica"]:::questaoNode;
+                </pre></div>
+
+                <div id="map16_wrapper" class="map-content hidden mermaid-container-wrapper"><pre class="mermaid" id="map16_mermaid_code">
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#4E342E', 'primaryBorderColor': '#D1C4E9', 'lineColor': '#795548', 'secondaryColor': '#FBE9E7', 'tertiaryColor': '#EFEBE9', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#FFF8E1', 'clusterBkg': '#FFFDE7'}}}%%
+graph TD
+    classDef aulaNode fill:#A04050,stroke:#600018,color:#fff,font-weight:bold
+    classDef topicoNode fill:#FFD700,stroke:#B8860B,color:#5d4037
+    classDef subTopicoNode fill:#D2B48C,stroke:#8B4513,color:#5d4037
+    classDef detalheNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037
+    classDef farmacoNode fill:#F5F5DC,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef obsNode fill:#FFF8DC,stroke:#DAA520,color:#5d4037,font-style:italic
+    classDef questaoNode fill:#FFE4B5,stroke:#D2691E,color:#5d4037,font-style:italic
+    classDef warningNode fill:#FFC0CB,stroke:#800020,color:#800020,font-weight:bold
+
+    A["Aula 16: Anestésicos Locais e Gerais"]:::aulaNode --> B["Anestesia Geral"]:::topicoNode;
+    A --> C["Anestesia Local/Regional"]:::topicoNode;
+
+    B --> B1["Definição: Depressão Reversível SNC -> Perda Percepção/Resposta"]:::detalheNode;
+    B --> B2["Componentes: Inconsciência, Sedação, Analgesia, Amnésia, Relaxamento Muscular"]:::detalheNode;
+    B --> B3["Estágios de Profundidade"]:::subTopicoNode;
+    B3 --> B3a["Estágio I: Analgesia/Amnésia"]:::detalheNode;
+    B3 --> B3b["Estágio II: Excitação/Delírio - Evitar"]:::detalheNode;
+    B3 --> B3c["Estágio III: Anestesia Cirúrgica - Objetivo"]:::detalheNode;
+    B3 --> B3d["Estágio IV: Depressão Bulbar - Perigoso"]:::warningNode;
+    B3 --> QN1_16["QN1: Estágios Anestesia Geral"]:::questaoNode;
+    B --> B4["Fases: Indução, Manutenção, Recuperação"]:::detalheNode;
+    B --> B5["Mecanismo de Ação Geral: Potencializa Inibição (GABA, Glicina); Reduz Excitação (NMDA, AMPA)"]:::detalheNode;
+    B --> B6["Agentes Intravenosos"]:::subTopicoNode;
+    B6 --> B6a["Propofol: Indução/Manutenção; Rápido Início/Recuperação; Risco Síndrome Infusão Propofol"]:::farmacoNode;
+    B6a --> QN2_16["QN2: Propofol e Limitação Infusão Contínua"]:::questaoNode;
+    B6 --> B6b["Etomidato: Indução; Pouca Depressão CV -> Bom Cardiopatas; Risco Supressão Adrenocortical"]:::farmacoNode;
+    B6b --> QN3_16["QN3: Etomidato - Vantagens e Desvantagens"]:::questaoNode;
+    B6 --> B6c["Cetamina (Anestesia Dissociativa)"]:::farmacoNode;
+    B6c --> B6c1["Mecanismo: Bloqueio NMDA; Analgesia, Amnésia; ↑Débito Cardíaco, Broncodilatação"]:::detalheNode;
+    B6c --> QN5_16["QN5: Anestésicos Dissociativos - Cetamina"]:::questaoNode;
+    B6 --> B6d["Tiopental (Barbitúrico): Pouco Usado; Anticonvulsivante"]:::farmacoNode;
+    B6 --> B6e["Midazolam (Benzodiazepínico): Sedação Pré-op, Amnésia"]:::farmacoNode;
+    B --> B7["Agentes Inalatórios"]:::subTopicoNode;
+    B7 --> B7a["Coeficiente Partição Sangue:Gás -> ↓Solubilidade = ↑Rapidez Indução/Recuperação"]:::detalheNode;
+    B7a --> QN4_16["QN4: Coeficiente Partição Sangue:Gás"]:::questaoNode;
+    B7 --> B7b["CAM (Concentração Alveolar Mínima) -> ↓CAM = ↑Potência"]:::detalheNode;
+    B7 --> B7c["Óxido Nitroso ('Gás Hilariante'): Baixa Potência, Boa Analgesia; Não causa Hipertermia Maligna"]:::farmacoNode;
+    B7 --> B7d["Halogenados: Isoflurano, Sevoflurano, Desflurano, Enflurano, Halotano (desuso)"]:::farmacoNode;
+    B7d --> B7d1["Hipertermia Maligna: Rara, Grave (Mutação RYR1); Tratamento: Dantroleno"]:::warningNode;
+    B --> B8["Fármacos Adjuvantes"]:::subTopicoNode;
+    B8 --> B8a["Opioides: Analgesia"]:::farmacoNode;
+    B8 --> B8b["Benzodiazepínicos: Sedação, Amnésia"]:::farmacoNode;
+    B8 --> B8c["Bloqueadores Neuromusculares: Relaxamento Muscular"]:::farmacoNode;
+    B8 --> QN6_16["QN6: Fármacos Adjuvantes e Papel"]:::questaoNode;
+
+    C --> C1["Definição: Bloqueio Impulsos Nervos Sensitivos Periféricos"]:::detalheNode;
+    C --> C2["Mecanismo de Ação: Bloqueio Canais de Na+ Voltagem-Dependentes"]:::detalheNode;
+    C2 --> C2a["Ligam-se ao canal -> Impedem influxo Na+ -> Inibem Geração/Propagação Potencial de Ação"]:::detalheNode;
+    C2 --> QN7_16["QN7: Mecanismo Anestésicos Locais Canais Na+"]:::questaoNode;
+    C2 --> QN8_16["QN8: Mecanismo Geral Anestésicos Locais"]:::questaoNode;
+    C --> C3["Tipos de Anestesia Local/Regional"]:::subTopicoNode;
+    C3 --> C3a["Tópica/Superficial: Mucosas, Pele"]:::detalheNode;
+    C3 --> C3b["Infiltrativa: Injeção Direta Tecidos -> Odontologia"]:::detalheNode;
+    C3 --> C3c["Bloqueio Nervoso: Próximo a Nervos/Plexos"]:::detalheNode;
+    C3 --> C3d["Regional Intravenosa (Bier Block)"]:::detalheNode;
+    C3 --> C3e["Espinal: Espaço Subaracnoide (LCR)"]:::detalheNode;
+    C3 --> C3f["Epidural/Peridural: Espaço Epidural"]:::detalheNode;
+    C --> C4["Fármacos: Lidocaína, Bupivacaína, Procaína, Ropivacaína, Mepivacaína, Tetracaína, Prilocaína, Benzocaína, Articaína"]:::farmacoNode;
+    C --> C5["Efeitos Adversos Sistêmicos (Absorção Excessiva)"]:::warningNode;
+    C5 --> C5a["SNC: Sonolência -> Convulsões -> Depressão Respiratória"]:::obsNode;
+    C5 --> C5b["Cardiovascular: ↓Excitabilidade, Vasodilatação -> Hipotensão"]:::obsNode;
+    C5 --> QN9_16["QN9: Efeitos Adversos Sistêmicos"]:::questaoNode;
+    C --> C6["Associação com Vasoconstritores (Adrenalina)"]:::detalheNode;
+    C6 --> C6a["Papel: ↓Absorção Sistêmica -> Prolonga Ação, ↓Toxicidade, ↓Sangramento"]:::detalheNode;
+    C6 --> C6b["Riscos: Isquemia em Áreas de Circulação Terminal (Dedos)"]:::warningNode;
+    C6 --> QN10_16["QN10: Papel e Riscos Vasoconstritores"]:::questaoNode;
+                </pre></div>
+
+                <div id="map17_wrapper" class="map-content hidden mermaid-container-wrapper"><pre class="mermaid" id="map17_mermaid_code">
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#4E342E', 'primaryBorderColor': '#D1C4E9', 'lineColor': '#795548', 'secondaryColor': '#FBE9E7', 'tertiaryColor': '#EFEBE9', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#FFF8E1', 'clusterBkg': '#FFFDE7'}}}%%
+graph TD
+    classDef aulaNode fill:#A04050,stroke:#600018,color:#fff,font-weight:bold
+    classDef topicoNode fill:#FFD700,stroke:#B8860B,color:#5d4037
+    classDef subTopicoNode fill:#D2B48C,stroke:#8B4513,color:#5d4037
+    classDef detalheNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037
+    classDef farmacoNode fill:#F5F5DC,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef obsNode fill:#FFF8DC,stroke:#DAA520,color:#5d4037,font-style:italic
+    classDef questaoNode fill:#FFE4B5,stroke:#D2691E,color:#5d4037,font-style:italic
+    classDef warningNode fill:#FFC0CB,stroke:#800020,color:#800020,font-weight:bold
+
+    A["Aula 17: Farmacologia do Sangue"]:::aulaNode --> B["Hemostasia"]:::topicoNode;
+    A --> C["Trombose"]:::topicoNode;
+    A --> D["Fármacos Antitrombóticos"]:::topicoNode;
+
+    B --> B1["Definição: Cessação Perda Sangue Vaso Lesado"]:::detalheNode;
+    B --> B2["Fases"]:::subTopicoNode;
+    B2 --> B2a["Primária: Tampão Plaquetário -> Adesão, Ativação, Agregação Plaquetária"]:::detalheNode;
+    B2a --> B2a1["Mediadores: Colágeno, FvW, ADP, TxA2, GPIIb/IIIa, Fibrinogênio"]:::detalheNode;
+    B2 --> B2b["Secundária: Malha de Fibrina -> Cascata de Coagulação"]:::detalheNode;
+    B2b --> B2b1["Vias: Intrínseca, Extrínseca, Comum"]:::detalheNode;
+    B2b --> B2b2["Fatores de Coagulação, Trombina -> Fibrinogênio em Fibrina"]:::detalheNode;
+    B2 --> B2c["Terciária: Fibrinólise -> Digestão Coágulo"]:::detalheNode;
+    B2c --> B2c1["Plasminogênio -> Plasmina (por t-PA) -> Degrada Fibrina"]:::detalheNode;
+
+    C --> C1["Definição: Ativação Inapropriada Hemostasia -> Trombo Patológico"]:::detalheNode;
+    C --> C2["Tipos: Venosa (Trombo Vermelho); Arterial (Trombo Branco)"]:::detalheNode;
+    C --> C3["Tríade de Virchow: Lesão Endotelial, Fluxo Anormal, Hipercoagulabilidade"]:::detalheNode;
+
+    D --> D1["Antiplaquetários (Atuam Hemostasia Primária)"]:::subTopicoNode;
+    D1 --> D1a["AAS (Ácido Acetilsalicílico)"]:::farmacoNode;
+    D1a --> D1a1["Mecanismo: Inibição Irreversível COX-1 -> ↓Síntese TxA2"]:::detalheNode;
+    D1a1 --> QN1_17["QN1: Mecanismo AAS e TxA2"]:::questaoNode;
+    D1a --> D1a2["Efeito Persistente: Vida da Plaqueta (7-10 dias)"]:::obsNode;
+    D1a2 --> QN3_17["QN3: Persistência Efeito AAS"]:::questaoNode;
+    D1 --> D1b["Inibidores Receptor P2Y12 (ADP)"]:::detalheNode;
+    D1b --> D1b1["Mecanismo: Bloqueiam Ligação ADP -> Inibem Ativação GPIIb/IIIa"]:::detalheNode;
+    D1b --> D1b2["Fármacos: Clopidogrel, Prasugrel (Irreversíveis); Ticagrelor (Reversível)"]:::farmacoNode;
+    D1b --> QN2_17["QN2: Mecanismo Inibidores P2Y12"]:::questaoNode;
+    D1 --> D1c["Inibidores Receptor GPIIb/IIIa"]:::detalheNode;
+    D1c --> D1c1["Mecanismo: Bloqueiam Ligação Fibrinogênio às Plaquetas"]:::detalheNode;
+    D1c --> D1c2["Fármacos: Abciximabe, Eptifibatida, Tirofibana (Parenterais)"]:::farmacoNode;
+
+    D --> D2["Anticoagulantes (Atuam Hemostasia Secundária)"]:::subTopicoNode;
+    D2 --> D2a["Heparinas (Inibidores Indiretos Trombina/Fator Xa)"]:::detalheNode;
+    D2a --> D2a1["Mecanismo: Potencializam Antitrombina III"]:::detalheNode;
+    D2a --> D2a2["Heparina Não Fracionada (HNF): Inibe Trombina e Fator Xa; Monitoramento TTPa"]:::farmacoNode;
+    D2a --> D2a3["Heparinas de Baixo Peso Molecular (HBPM): Enoxaparina, Dalteparina; Maior Ação Anti-Xa; Menos Monitoramento, Maior T½"]:::farmacoNode;
+    D2a2 & D2a3 --> QN4_17["QN4: Diferenças HNF vs. HBPM"]:::questaoNode;
+    D2a --> D2a4["Antídoto: Sulfato de Protamina"]:::farmacoNode;
+    D2 --> D2b["Inibidores Diretos da Trombina: Dabigatrana (Oral); Lepirudina (Parenteral)"]:::farmacoNode;
+    D2 --> D2c["Inibidores Diretos do Fator Xa: Rivaroxabana, Apixabana (Orais)"]:::farmacoNode;
+    D2 --> D2d["Antagonistas Vitamina K - Varfarina"]:::farmacoNode;
+    D2d --> D2d1["Mecanismo: Inibe Vitamina K Epóxido Redutase -> ↓Síntese Fatores II, VII, IX, X"]:::detalheNode;
+    D2d --> D2d2["Cuidados: Monitoramento INR, Interações (CYP, Dieta), Risco Sangramento, Teratogênica"]:::warningNode;
+    D2d --> QN5_17["QN5: Mecanismo Varfarina e Cuidados"]:::questaoNode;
+
+    D --> D3["Fibrinolíticos/Trombolíticos (Atuam Hemostasia Terciária)"]:::subTopicoNode;
+    D3 --> D3a["Mecanismo: Convertem Plasminogênio em Plasmina -> Lise Fibrina"]:::detalheNode;
+    D3 --> QN6_17["QN6: Mecanismo Trombolíticos e Plasminogênio"]:::questaoNode;
+    D3 --> D3b["Fármacos: Estreptoquinase, Uroquinase, Alteplase (t-PA)"]:::farmacoNode;
+    D3 --> D3c["Uso Clínico: IAM, AVC Isquêmico, TEP -> Janela Terapêutica Estreita"]:::obsNode;
+    D3c --> QN7_17["QN7: Janela Terapêutica Trombolíticos"]:::questaoNode;
+    D3 --> D3d["Risco Principal: Sangramento"]:::warningNode;
+
+    D --> D4["Antifibrinolíticos: Ácido Tranexâmico, Ácido Aminocaproico (Inibem Plasmina)"]:::farmacoNode;
+    A --> E["Distúrbios da Coagulação: Hemofilias, Def. Vit. K"]:::topicoNode;
+                </pre></div>
+
+                <div id="map18_wrapper" class="map-content hidden mermaid-container-wrapper"><pre class="mermaid" id="map18_mermaid_code">
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#4E342E', 'primaryBorderColor': '#D1C4E9', 'lineColor': '#795548', 'secondaryColor': '#FBE9E7', 'tertiaryColor': '#EFEBE9', 'fontFamily': 'Inter', 'fontSize': '15px', 'nodeBorder': '2px', 'mainBkg': '#FFF8E1', 'clusterBkg': '#FFFDE7'}}}%%
+graph TD
+    classDef aulaNode fill:#A04050,stroke:#600018,color:#fff,font-weight:bold
+    classDef topicoNode fill:#FFD700,stroke:#B8860B,color:#5d4037
+    classDef subTopicoNode fill:#D2B48C,stroke:#8B4513,color:#5d4037
+    classDef detalheNode fill:#FFEBCD,stroke:#DEB887,color:#5d4037
+    classDef farmacoNode fill:#F5F5DC,stroke:#B8860B,color:#5d4037,font-weight:bold
+    classDef obsNode fill:#FFF8DC,stroke:#DAA520,color:#5d4037,font-style:italic
+    classDef questaoNode fill:#FFE4B5,stroke:#D2691E,color:#5d4037,font-style:italic
+    classDef warningNode fill:#FFC0CB,stroke:#800020,color:#800020,font-weight:bold
+
+    A["Aula 18: Anti-histamínicos"]:::aulaNode --> B["Histamina"]:::topicoNode;
+    A --> C["Receptores Histamínicos"]:::topicoNode;
+    A --> D["Anti-histamínicos H1"]:::topicoNode;
+    A --> E["Outros Anti-histamínicos"]:::topicoNode;
+
+    B --> B1["Amina Biogênica: Alergia, Inflamação, Secreção Gástrica, Neurotransmissão"]:::detalheNode;
+    B --> B2["Síntese: L-histidina --> Histidina Descarboxilase"]:::detalheNode;
+    B --> B3["Armazenamento: Mastócitos, Basófilos"]:::detalheNode;
+    B --> B4["Liberação: Reações Alérgicas (IgE), Anafilaxia"]:::detalheNode;
+
+    C --> C1["H1"]:::subTopicoNode;
+    C1 --> C1a["Distribuição: M. Liso, Endotélio, SNC"]:::detalheNode;
+    C1 --> C1b["Efeitos: Contração M. Liso (brônquios), Vasodilatação, ↑Permeabilidade Vascular (edema), Prurido, Dor, Vigília"]:::detalheNode;
+    C --> C2["H2"]:::subTopicoNode;
+    C2 --> C2a["Distribuição: Cél. Parietais Gástricas, Coração, Mastócitos, SNC"]:::detalheNode;
+    C2 --> C2b["Efeitos: ↑Secreção Ácida Gástrica, ↑FC"]:::detalheNode;
+    C1 & C2 --> QN1_18["QN1: Diferenças Receptores H1 vs. H2"]:::questaoNode;
+    C --> C3["H3: SNC, Autorreceptor/Heterorreceptor -> Modula Liberação Neurotransmissores"]:::detalheNode;
+    C --> C4["H4: Cél. Hematopoiéticas -> Quimiotaxia, Inflamação"]:::detalheNode;
+
+    D --> D1["Mecanismo: Agonistas Inversos/Antagonistas H1 -> Estabilizam Forma Inativa Receptor"]:::detalheNode;
+    D1 --> QN2_18["QN2: Mecanismo Anti-H1 1ª Geração e Sedação"]:::questaoNode;
+    D1 --> QN4_18["QN4: Efeitos Farmacodinâmicos Anti-H1"]:::questaoNode;
+    D --> D2["Primeira Geração"]:::subTopicoNode;
+    D2 --> D2a["Características: Lipossolúveis, Atravessam BHE -> Sedação; Menos Seletivos -> Efeitos Anticolinérgicos, Anti-α-adrenérgicos"]:::detalheNode;
+    D2 --> D2b["Fármacos: Difenidramina, Clorfeniramina, Prometazina, Hidroxizina, Dexclorfeniramina"]:::farmacoNode;
+    D2 --> D2c["Efeitos Adversos: Sedação, Boca Seca, Visão Turva, Tontura"]:::obsNode;
+    D --> D3["Segunda Geração"]:::subTopicoNode;
+    D3 --> D3a["Características: Ionizados pH Fisiológico, Não Atravessam BHE (ou pouco) -> Menos Sedação; Mais Seletivos H1"]:::detalheNode;
+    D3 --> D3b["Fármacos: Loratadina, Cetirizina, Fexofenadina, Desloratadina, Levocetirizina"]:::farmacoNode;
+    D2 & D3 --> QN3_18["QN3: Comparação Anti-H1 1ª vs. 2ª Geração"]:::questaoNode;
+    D --> D4["Usos Terapêuticos"]:::subTopicoNode;
+    D4 --> D4a["Reações Alérgicas: Rinite, Urticária, Conjuntivite, Prurido -> ↓Vasodilatação, ↓Edema, ↓Prurido"]:::detalheNode;
+    D4a --> QN5_18["QN5: Anti-H1 em Reações Alérgicas"]:::questaoNode;
+    D4 --> D4b["Cinetose (Enjoo de Movimento): Difenidramina, Dimenidrinato -> Inibem Sinais Vestibulares"]:::detalheNode;
+    D4 --> D4c["Insônia: Difenidramina, Doxilamina -> Efeito Sedativo"]:::detalheNode;
+    D4b & D4c --> QN6_18["QN6: Anti-H1 em Situações Não Alérgicas"]:::questaoNode;
+    D --> D5["Farmacocinética: Boa Absorção Oral, Metabolismo Hepático (CYP)"]:::detalheNode;
+    D --> D6["Interações: Potencializam Álcool/Depressores SNC; IMAO exacerbam Efeitos Anticolinérgicos"]:::obsNode;
+
+    E --> E1["Antagonistas H2: Cimetidina, Ranitidina -> ↓Secreção Ácida Gástrica"]:::farmacoNode;
+    E --> E2["Antagonistas/Agonistas Inversos H3: Pitolisanto -> Narcolepsia, ↑Vigília"]:::farmacoNode;
+    E --> E3["Antagonistas H4: Potencial Terapêutico Prurido/Dor Neuropática - Em Estudo"]:::detalheNode;
+                </pre></div>
+            </div>
+        </div>
+
+        <!-- Seção do Assistente de IA Gemini -->
+        <div id="aiAssistantSection" class="content-container p-4 md:p-6">
+            <h2 class="text-xl md:text-2xl font-bold text-[var(--cor-bordo-principal)] mb-4">✨ Assistente de Estudo IA</h2>
+            
+            <div class="mb-4">
+                <label for="aiQueryInput" class="block text-sm font-medium text-gray-700 mb-1">Faça uma pergunta sobre o tópico atual ou peça para explicar um conceito:</label>
+                <textarea id="aiQueryInput" rows="2" class="w-full p-2 border border-[var(--cor-borda-suave)] rounded-md shadow-sm focus:ring-[var(--cor-bordo-principal)] focus:border-[var(--cor-bordo-principal)]" placeholder="Ex: Qual a diferença entre ISRS e ADTs?"></textarea>
+            </div>
+            <div class="ai-buttons-container">
+                <button id="askAiButton" class="bg-[var(--cor-bordo-principal)] hover:bg-[var(--cor-bordo-hover)] text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out flex-1">
+                    Perguntar à IA
+                </button>
+                <button id="summarizeMapButton" class="bg-[var(--cor-dourado-principal)] hover:bg-[var(--cor-dourado-texto)] text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out flex-1">
+                    Resumir Mapa Atual ✨
+                </button>
+            </div>
+
+            <div id="aiLoadingIndicator" class="mt-4 hidden">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-[var(--cor-bordo-principal)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-[var(--cor-texto-secundario)]">Processando sua solicitação...</p>
+                </div>
+            </div>
+            <div id="aiResponseArea" class="mt-4 p-3 border border-[var(--cor-borda-suave)] rounded-md">
+                Aguardando sua pergunta...
+            </div>
+        </div>
+    </main>
+    </div> <!-- Fim do .main-container -->
+
+
+    <script>
+        mermaid.initialize({ startOnLoad: false }); 
+
+        let currentMapId = null; 
+        let currentLink = null;
+        let currentActiveMermaidPreElement = null; 
+        let currentScale = 1.0;
+        const scaleStep = 0.2; // Aumentado o passo do zoom
+        const minScale = 0.2; 
+        const maxScale = 5.0; // Aumentado o zoom máximo
+
+        function applyZoom() {
+            if (currentActiveMermaidPreElement) { 
+                const svgElement = currentActiveMermaidPreElement.querySelector('svg');
+                if (svgElement) {
+                    svgElement.style.transform = `scale(${currentScale})`;
+                }
+            }
+        }
+
+        function zoomIn() {
+            if (currentScale < maxScale) {
+                currentScale = parseFloat((currentScale + scaleStep).toFixed(2));
+                applyZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (currentScale > minScale) {
+                currentScale = parseFloat((currentScale - scaleStep).toFixed(2));
+                applyZoom();
+            }
+        }
+
+        function resetZoom() {
+            currentScale = 1.0;
+            applyZoom();
+             if (currentActiveMermaidPreElement) { 
+                currentActiveMermaidPreElement.scrollTop = 0;
+                currentActiveMermaidPreElement.scrollLeft = 0;
+            }
+        }
+
+        function showMap(mapWrapperId, linkElement) {
+            document.getElementById('welcomeMessage').classList.add('hidden');
+            document.getElementById('mapDisplayArea').classList.remove('hidden');
+            document.getElementById('mapDisplayArea').classList.add('flex', 'flex-col'); 
+            document.getElementById('aiAssistantSection').classList.remove('hidden'); 
+
+            const mapContents = document.querySelectorAll('.map-content');
+            mapContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            if (currentLink) {
+                currentLink.classList.remove('active', 'bg-[#efebe9]', 'text-[var(--cor-bordo-principal)]', 'border-[var(--cor-bordo-principal)]');
+                currentLink.classList.add('text-[var(--cor-texto-secundario)]');
+            }
+            
+            const selectedMapWrapper = document.getElementById(mapWrapperId); 
+            if (selectedMapWrapper) {
+                selectedMapWrapper.classList.remove('hidden');
+                const navLinkTextElement = linkElement.querySelector('.nav-link-text');
+                if (navLinkTextElement) {
+                     document.getElementById('mapTitle').textContent = navLinkTextElement.textContent; 
+                }
+
+
+                linkElement.classList.add('active', 'bg-[#efebe9]', 'text-[var(--cor-bordo-principal)]', 'border-[var(--cor-bordo-principal)]');
+                linkElement.classList.remove('text-[var(--cor-texto-secundario)]');
+                currentLink = linkElement;
+                currentMapId = mapWrapperId; 
+                currentActiveMermaidPreElement = selectedMapWrapper.querySelector('pre.mermaid');
+
+                resetZoom(); 
+
+                if (currentActiveMermaidPreElement) {
+                    const mermaidCodeElementId = currentActiveMermaidPreElement.id;
+                    let mermaidCode = currentActiveMermaidPreElement.dataset.originalCode;
+
+                    if (!mermaidCode) { // Se o código original não foi armazenado, pega do textContent
+                        mermaidCode = currentActiveMermaidPreElement.textContent;
+                        currentActiveMermaidPreElement.dataset.originalCode = mermaidCode; 
+                    }
+                    
+                    currentActiveMermaidPreElement.innerHTML = '<div class="flex justify-center items-center h-full"><svg class="animate-spin h-8 w-8 text-[var(--cor-bordo-principal)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>'; 
+                    currentActiveMermaidPreElement.removeAttribute('data-processed');
+
+                    if (!mermaidCode || mermaidCode.trim() === '') {
+                        console.error("Mermaid code is empty for " + mermaidCodeElementId);
+                        currentActiveMermaidPreElement.innerHTML = `<div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-md"><p class="font-semibold">Erro: Código do mapa mental está vazio.</p></div>`;
+                        return;
+                    }
+                    
+                    setTimeout(async () => {
+                        try {
+                            const uniqueSvgId = 'mermaid-svg-' + mapWrapperId.replace('_wrapper', '') + '-' + Date.now();
+                            const { svg, bindFunctions } = await mermaid.render(uniqueSvgId, mermaidCode);
+                            currentActiveMermaidPreElement.innerHTML = svg;
+                            if (bindFunctions) {
+                                bindFunctions(currentActiveMermaidPreElement); 
+                            }
+                            setTimeout(applyZoom, 50); 
+                        } catch (err) {
+                            console.error("Mermaid rendering error on " + mermaidCodeElementId + ":", err);
+                            currentActiveMermaidPreElement.innerHTML = 
+                                `<div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">` +
+                                `<p class="font-semibold">Erro ao renderizar o mapa:</p>` +
+                                `<p class="text-sm">${err.message || err.str || JSON.stringify(err)}</p>` +
+                                `<p class="mt-2 font-semibold">Código Mermaid com problema (verifique a sintaxe):</p>` +
+                                `<pre class="text-xs mt-1 whitespace-pre-wrap bg-gray-100 p-2 rounded">${mermaidCode.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>` +
+                                `</div>`;
+                        }
+                    }, 150); // Aumentado o delay para renderização mais complexa
+                }
+                document.getElementById('aiResponseArea').innerHTML = 'Aguardando sua pergunta...';
+                document.getElementById('aiQueryInput').value = '';
+            } else {
+                console.error("Map wrapper with ID '" + mapWrapperId + "' not found.");
+            }
+        }
+        
+        document.getElementById('toggleMenuBtn').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('minimized');
+            const isMinimized = sidebar.classList.contains('minimized');
+            this.querySelector('.sidebar-text').style.display = isMinimized ? 'none' : 'inline';
+            document.getElementById('sidebarTitle').style.display = isMinimized ? 'none' : 'block';
+            const navLinkTexts = document.querySelectorAll('#sidebar .nav-link-text');
+            navLinkTexts.forEach(text => {
+                text.style.display = isMinimized ? 'none' : 'inline';
+            });
+            const navLinks = document.querySelectorAll('#sidebar .nav-link');
+             navLinks.forEach(link => {
+                link.style.justifyContent = isMinimized ? 'center' : 'flex-start';
+            });
+        });
+
+        async function askAI() {
+            const queryInput = document.getElementById('aiQueryInput');
+            const userQuery = queryInput.value.trim();
+            const mapTitleElement = document.getElementById('mapTitle');
+            const currentMapTopic = mapTitleElement.textContent || "Farmacologia Geral";
+            const aiResponseArea = document.getElementById('aiResponseArea');
+            const loadingIndicator = document.getElementById('aiLoadingIndicator');
+
+            if (!userQuery) {
+                aiResponseArea.innerHTML = '<p class="text-red-500">Por favor, insira uma pergunta ou conceito.</p>';
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            aiResponseArea.innerHTML = ''; 
+
+            const prompt = `Como um assistente de estudos de farmacologia, explique o seguinte conceito ou responda à seguinte pergunta, considerando o tópico da aula atual '${currentMapTopic}':\n\n"${userQuery}"\n\nForneça uma resposta clara, concisa e precisa, em português, adequada para um estudante universitário de farmacologia. Se possível, utilize o contexto da aula mencionada para refinar a resposta. Formate a resposta de maneira legível, usando parágrafos e quebras de linha conforme apropriado.`;
+
+            try {
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }]
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Gemini API Error:', errorData);
+                    throw new Error(`Erro da API: ${response.statusText}. Detalhes: ${JSON.stringify(errorData.error || errorData)}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    aiResponseArea.innerHTML = text.replace(/\n/g, '<br>');
+                } else {
+                    aiResponseArea.innerHTML = '<p class="text-red-500">Não foi possível obter uma resposta da IA ou a resposta estava vazia.</p>';
+                    console.error('Unexpected API response structure:', result);
+                }
+            } catch (error) {
+                console.error('Erro ao chamar a API Gemini:', error);
+                aiResponseArea.innerHTML = `<p class="text-red-500">Ocorreu um erro ao processar sua solicitação: ${error.message}. Verifique o console para mais detalhes.</p>`;
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        async function summarizeMap() {
+            const aiResponseArea = document.getElementById('aiResponseArea');
+            const loadingIndicator = document.getElementById('aiLoadingIndicator');
+            const mapTitleElement = document.getElementById('mapTitle');
+            const currentMapTopic = mapTitleElement.textContent || "esta aula de Farmacologia";
+
+            if (!currentMapId) { 
+                aiResponseArea.innerHTML = '<p class="text-red-500">Nenhum mapa mental está selecionado para resumir.</p>';
+                return;
+            }
+
+            const mapWrapperElement = document.getElementById(currentMapId); 
+            if (!mapWrapperElement) {
+                aiResponseArea.innerHTML = '<p class="text-red-500">Não foi possível encontrar o conteúdo do mapa mental.</p>';
+                return;
+            }
+            const mermaidCodeElement = mapWrapperElement.querySelector('pre.mermaid'); 
+            if (!mermaidCodeElement || !mermaidCodeElement.dataset.originalCode) { 
+                 aiResponseArea.innerHTML = '<p class="text-red-500">Não foi possível encontrar o código Mermaid original do mapa.</p>';
+                return;
+            }
+            const mermaidCode = mermaidCodeElement.dataset.originalCode; 
+
+
+            loadingIndicator.classList.remove('hidden');
+            aiResponseArea.innerHTML = ''; 
+
+            const prompt = `Resuma os principais tópicos e suas relações descritos no seguinte mapa mental (formato Mermaid) sobre '${currentMapTopic}', em formato de lista com marcadores (bullet points). O resumo deve ser conciso, em português, e focado nos pontos chave para estudo:\n\n\`\`\`mermaid\n${mermaidCode}\n\`\`\`\n\nO resumo deve ser apresentado de forma clara e organizada.`;
+
+            try {
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }]
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                 if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Gemini API Error for summarization:', errorData);
+                    throw new Error(`Erro da API ao resumir: ${response.statusText}. Detalhes: ${JSON.stringify(errorData.error || errorData)}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    aiResponseArea.innerHTML = text.replace(/\n/g, '<br>'); 
+                } else {
+                    aiResponseArea.innerHTML = '<p class="text-red-500">Não foi possível obter um resumo da IA ou o resumo estava vazio.</p>';
+                     console.error('Unexpected API response structure for summarization:', result);
+                }
+            } catch (error) {
+                console.error('Erro ao chamar a API Gemini para resumir:', error);
+                aiResponseArea.innerHTML = `<p class="text-red-500">Ocorreu um erro ao tentar resumir o mapa: ${error.message}. Verifique o console para mais detalhes.</p>`;
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const askAiBtn = document.getElementById('askAiButton');
+            if (askAiBtn) {
+                askAiBtn.addEventListener('click', askAI);
+            }
+
+            const summarizeMapBtn = document.getElementById('summarizeMapButton');
+            if (summarizeMapBtn) {
+                summarizeMapBtn.addEventListener('click', summarizeMap);
+            }
+            document.getElementById('aiAssistantSection').classList.add('hidden');
+            document.getElementById('mapDisplayArea').classList.add('hidden');
+
+
+            document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
+            document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);
+            document.getElementById('zoomResetBtn').addEventListener('click', resetZoom);
+            
+            const sidebar = document.getElementById('sidebar');
+            const isMinimized = sidebar.classList.contains('minimized');
+            const toggleButtonTextSpan = document.getElementById('toggleMenuBtn').querySelector('.sidebar-text');
+            if (toggleButtonTextSpan) {
+                toggleButtonTextSpan.style.display = isMinimized ? 'none' : 'inline';
+            }
+            
+            const sidebarTitle = document.getElementById('sidebarTitle');
+            if (sidebarTitle) {
+                 sidebarTitle.style.display = isMinimized ? 'none' : 'block';
+            }
+
+            const navLinkTexts = document.querySelectorAll('#sidebar .nav-link-text');
+            navLinkTexts.forEach(text => {
+                text.style.display = isMinimized ? 'none' : 'inline';
+            });
+            const navLinks = document.querySelectorAll('#sidebar .nav-link');
+             navLinks.forEach(link => {
+                link.style.justifyContent = isMinimized ? 'center' : 'flex-start';
+            });
+        });
+    </script>
+
+</body>
+</html>
+
+
+GABARITO:
+1 - C
+2 - D
+3 - B
+4 - B
+5 - A
+6 - C
+7 - C
+8 - D
+9 - B
+10 - B
+11 - B
+12 - D
+13 - A, C
+14 - B
+15 - A
+16 - A, B, D
+17 - B
+18 - A
+19 - B
+20 - D
+21 - C
+22 - A
+23 - B
+24 - C
+25 - B
+26 - A
+27 - A, B, C, D
